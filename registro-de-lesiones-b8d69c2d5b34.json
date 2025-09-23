@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "registro-de-lesiones",
+  "private_key_id": "b8d69c2d5b34354c79a9646ce74f76075b953cea",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQC3wCAfRCLypF2j\n4ZHc81wyR1/H385I3UsXC6y1QqOQpIFNMSO9ezApvNXsv+SIqe46q7rShZfsDLIK\nwzLiuYYe/PsjU9wzhEJQUNLbqWzdxksofosmAI7H5tzPZ12SlIFwVGXgNpDsJRTQ\nCo71jzOAuOaL9YvY0iu7bi0x8TzpmY0Kp/SOPkxZjnMj0c/BivSC9J4kwDY7KluZ\n3BYB448gGUHwjMSW4R9t0s1vhfdeyzpVnqgnVUMM4I12stL0WTflFBEghhTtXxo7\nSYIwXtyHwHVlVxz8yyEBQkahGvvTOqWg9WzBGxEqsPBLjTvIuDKHVzmd1mQoKobW\nw0sXrDvLAgMBAAECggEALkzNa0NucOhkpfIlIGD7xrmAU2s73dVQ4e4xpvyzHTOu\nVwZ+RHThZmrsFnsluR/kZMk3ymsaJELwq9CSpllsB6vkFfs//YUidn1fHDVdNqaL\n8pisNDeowosT8XjQtaoQ0X6aqvvk2XPggile61YZeqJciUCma8xNc61n2vE30X5O\nxi0wKEZzDK9FWG2uiSTyP/xBMcGbYvvmJXnGo6JDuEFW8Wb9Zr3jRqnJoeqI0skG\n3JZGyeS7QTF8rxF7JOPG2H/9ONE29WphfNAZU10O2wF+6TCuOrycSNu8K5vJ8BxJ\njJO+imz+qGZmSANhWETMSUMk07YI7efuS5RvBiEE+QKBgQD1+/eDhb9CVw6GWJCz\n0ha2fAM9eL+Y8n8ElC93mlB0sr5ygdz4ralY9pmC8t3bncYsYqLMystHDQosBcO9\nCZt+h6HO0ES2iLt5whYVsfEspkiAh419W2rHqC5fKLdtrkWhI1KUdAGoBj82KRcK\nZL5VBmZQZOmRtR8q7JlEMQ0OaQKBgQC/O3X/83Uup9AkXAYRiy04KRZFTVb0AtGJ\nNp3lu5t0HcuOgRjQM5wXaTtZJDBy6133dAwm4wnA38ZKfSeyhGMlsyGKwHSXpEd/\nR5d1hk42sG/DxmCgaCLPx5BDuFpKs9MIndSHTFLWm17blx2BaXYxtk80Eg4Gs41j\n/8NoIaGaEwKBgQCcU99/dJaSYKVYeByuS0wn+TRN8tlBKIvUqyBnkGilYZtrRmDa\nofNIGKCC+jpJAkIZny37nL4Hj5/xTlCRaPOrPCN3PiENKGSNAu3qJ8YwLBVTqdIf\n4uM/tACUdVntmJ2jxMEMm5UZ5a5yizabYl8bxg9r9FYEReli7C6TieDUUQKBgQCa\n5HOodC7XMm/B85OqxBtFYOo8Ce/DR0EnLcjpGnNIsxV8gI5znUnyIHdEta5UdtYu\np51sJftxcQ9wqDzuOJMCJzyk4UvOw+5xZrCELdvOKkzsuxLq+k4wFAmDAKCJ32uw\nj/5j9GsojsJfhOAOQTjN/Ufb+j/IJ8j/VVuWTZ9SZwKBgQC5+6OmIfmoUPse/ygb\nnvDEnN7qr2vvbcSeVn3zdoJTihTG71FwhJ3HcNmQslBaLzjIDLDwLxmie4K1Kvbi\nZYS8VZ2W+YE/7i+hoXgD/DHssXxbyzflJMH4MuZS9KX2Z/1d0Bu0hLfG1STczpnB\nVVKwEdhy15BdVe86lxW+wjeIuQ==\n-----END PRIVATE KEY-----\n",
+  "client_email": "streamlit-lesiones-app@registro-de-lesiones.iam.gserviceaccount.com",
+  "client_id": "107643172497258494234",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/streamlit-lesiones-app%40registro-de-lesiones.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
