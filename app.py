@@ -4,12 +4,36 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import datetime
 
-# --- CONFIGURACIÓN DE LA APLICACIÓN ---
-st.set_page_config(
-    page_title="Registro de Lesiones | Fútbol Femenino",
-    page_icon="⚽",
-    layout="wide"
-)
+import src.config as config
+config.init_config()
+
+from src.auth import init_app_state, login_view, menu, validate_login
+init_app_state()
+
+validate_login()
+
+# Authentication gate
+if not st.session_state["auth"]["is_logged_in"]:
+    login_view()
+    st.stop()
+
+#st.header('Wellness & :red[RPE]', divider=True)
+st.header("Registro de :red[Lesiones]", divider=True)
+
+menu()
+
+# --- VARIABLES DE ESTADO/SESIÓN ---
+# Define los perfiles que se usarán en la aplicación
+PERFILES = ["Médico/Reporte", "Administrador"]
+
+# 1. Menú de Perfiles de Usuario
+perfil_seleccionado = "Administrador"
+
+# perfil_seleccionado = st.sidebar.selectbox(
+#     "Seleccionar Perfil de Ingreso",
+#     PERFILES
+# )
+
 
 # --- CONFIGURACIÓN DE GOOGLE SHEETS ---
 SCOPE = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -17,9 +41,6 @@ CREDS_FILE = 'registro-de-lesiones-b8d69c2d5b34.json'
 SHEET_NAME = 'Propuesta tablas'
 WORKSHEET_NAME = 'Tabla I invent jugadores' # Asegúrate de que este nombre sea exacto
 
-# --- VARIABLES DE ESTADO/SESIÓN ---
-# Define los perfiles que se usarán en la aplicación
-PERFILES = ["Médico/Reporte", "Administrador"]
 
 # --- FUNCIONES ---
 
@@ -231,17 +252,9 @@ def view_editar_registro(df_lesiones):
                 editar_registro(df_lesiones, gsheets_row_index, updated_row_data)
 
 
+#######################################################################################
 # --- LÓGICA DE NAVEGACIÓN PRINCIPAL ---
 
-st.title("⚽️ Registro de Lesiones - Club de Fútbol Femenino")
-
-# 1. Menú de Perfiles de Usuario
-perfil_seleccionado = st.sidebar.selectbox(
-    "Seleccionar Perfil de Ingreso",
-    PERFILES
-)
-
-st.sidebar.markdown("---")
 
 # 2. Cargar datos para el Dashboard y Edición
 df_lesiones = get_data_from_gsheets()
