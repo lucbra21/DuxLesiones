@@ -65,5 +65,5 @@ filtered = filtered[
 
 # === Mostrar resultado ===
 st.markdown(f"**{len(filtered)} lesiones encontradas**")
-st.dataframe(filtered, use_container_width=True)
+st.dataframe(filtered, width='stretch')
 
