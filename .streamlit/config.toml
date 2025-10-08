@@ -3,6 +3,7 @@ base="light"
 font = "sans-serif"
 headingFont = "sans-serif"
 codeFont = "monospace"
+#primaryColor = "#a70c2c"
 
 [theme.sidebar]
 font = "sans-serif"

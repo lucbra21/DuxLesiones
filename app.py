@@ -1,13 +1,12 @@
 import streamlit as st
 import pandas as pd
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
 import datetime
 
 import src.config as config
 config.init_config()
 
 from src.auth import init_app_state, login_view, menu, validate_login
+from src.io_files import get_records_df
 init_app_state()
 
 validate_login()
@@ -17,8 +16,7 @@ if not st.session_state["auth"]["is_logged_in"]:
     login_view()
     st.stop()
 
-#st.header('Wellness & :red[RPE]', divider=True)
-st.header("Registro de :red[Lesiones]", divider=True)
+st.header("Histórico de :red[Lesiones]", divider=True)
 
 menu()
 
@@ -29,70 +27,26 @@ PERFILES = ["Médico/Reporte", "Administrador"]
 # 1. Menú de Perfiles de Usuario
 perfil_seleccionado = "Administrador"
 
-# perfil_seleccionado = st.sidebar.selectbox(
-#     "Seleccionar Perfil de Ingreso",
-#     PERFILES
-# )
-
-
-# --- CONFIGURACIÓN DE GOOGLE SHEETS ---
-SCOPE = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-CREDS_FILE = 'registro-de-lesiones-b8d69c2d5b34.json'
-SHEET_NAME = 'Propuesta tablas'
+#SHEET_NAME = 'Propuesta tablas'
 WORKSHEET_NAME = 'Tabla I invent jugadores' # Asegúrate de que este nombre sea exacto
 
+records = get_records_df()  # Carga y cachea los datos
 
-# --- FUNCIONES ---
-
-@st.cache_data(ttl=600)  # Cacha los datos por 10 minutos para evitar llamadas repetidas
-def get_data_from_gsheets():
-    try:
-        creds = ServiceAccountCredentials.from_json_keyfile_name(CREDS_FILE, SCOPE)
-        client = gspread.authorize(creds)
-        spreadsheet = client.open(SHEET_NAME)
-        # Usamos el nombre de la hoja de cálculo de los registros
-        worksheet = spreadsheet.worksheet(WORKSHEET_NAME) 
-        data = worksheet.get_all_records()
-        df = pd.DataFrame(data)
-        # Añadir una columna de índice para ayudar con la edición
-        df.insert(0, 'ID', df.index + 2) # +2 porque la fila 1 es el encabezado, y el índice empieza en 0
-        return df
-    except Exception as e:
-        st.error(f"Error al conectar con Google Sheets: {e}")
-        return pd.DataFrame() 
-
-def registrar_lesion(data):
-    try:
-        creds = ServiceAccountCredentials.from_json_keyfile_name(CREDS_FILE, SCOPE)
-        client = gspread.authorize(creds)
-        spreadsheet = client.open(SHEET_NAME)
-        worksheet = spreadsheet.worksheet(WORKSHEET_NAME)
-        
-        # Añade la nueva fila a la hoja de cálculo
-        worksheet.append_row(data)
-        
-        st.success("¡Lesión registrada con éxito! Los datos han sido guardados.")
-        st.balloons() 
-        # Limpiar el caché de datos para que el dashboard se actualice
-        st.cache_data.clear()
-        st.rerun() # Volver a ejecutar para mostrar el dashboard actualizado
-        
-    except Exception as e:
-        st.error(f"Error al guardar los datos: {e}")
+st.dataframe(records)
 
 def editar_registro(df_original, row_id, new_data):
     """Función simulada para editar una fila. En GSheets, se debe hacer por índice."""
     try:
-        creds = ServiceAccountCredentials.from_json_keyfile_name(CREDS_FILE, SCOPE)
-        client = gspread.authorize(creds)
-        spreadsheet = client.open(SHEET_NAME)
-        worksheet = spreadsheet.worksheet(WORKSHEET_NAME)
+        #creds = ServiceAccountCredentials.from_json_keyfile_name(CREDS_FILE, SCOPE)
+        #client = gspread.authorize(creds)
+        #spreadsheet = client.open(SHEET_NAME)
+        #worksheet = spreadsheet.worksheet(WORKSHEET_NAME)
         
         # row_id es el índice de la fila en GSheets (ID + 2)
         row_to_update = row_id 
         
         # Actualiza la fila con los nuevos datos (new_data debe ser una lista)
-        worksheet.update(f'A{row_to_update}:{chr(65 + len(new_data) - 1)}{row_to_update}', [new_data])
+        #worksheet.update(f'A{row_to_update}:{chr(65 + len(new_data) - 1)}{row_to_update}', [new_data])
         
         st.success(f"Registro ID {row_id} actualizado con éxito.")
         st.cache_data.clear()
@@ -101,69 +55,6 @@ def editar_registro(df_original, row_id, new_data):
     except Exception as e:
         st.error(f"Error al editar el registro: {e}")
         st.info("Asegúrate de que la hoja de Google Sheets no esté protegida o que las credenciales sean correctas.")
-
-
-# --- VISTA DEL FORMULARIO DE REGISTRO ---
-
-def view_registro_lesion():
-    st.subheader("Registrar Nueva Lesión ✍️")
-    
-    # Lista de jugadoras predefinidas (DEBES REEMPLAZAR CON TU LISTA REAL)
-    jugadoras_ejemplo = ['Seleccionar Jugadora', 'Catalina Pérez', 'Linda Caicedo', 'Mayra Ramírez', 'Manuela Vanegas', 'Daniela Montoya']
-
-    with st.form("lesion_form"):
-        # La nueva columna para el nombre de la jugadora
-        jugadora_seleccionada = st.selectbox("Nombre de la Jugadora", jugadoras_ejemplo)
-
-        # Organiza el formulario en dos columnas
-        col1, col2 = st.columns(2)
-        with col1:
-            posicion = st.selectbox("Posición", ["Portera", "Defensa", "Medio centro", "Delantera"])
-            fecha_lesion = st.date_input("Fecha de la lesión", datetime.date.today())
-            estado_lesion = st.selectbox("Estado de la lesión", ["Activo", "Inactivo"])
-            tipo_lesion = st.selectbox("Tipo de lesión", ["Muscular", "Ósea", "Tendinosa", "Articular", "Ligamentosa", "Contusión"])
-            zona_cuerpo = st.selectbox("Zona del cuerpo", ["Cabeza", "Cuello", "Tronco", "Hombro", "Codo", "Muñeca", "Mano", "Cadera", "Ingle", "Rodilla", "Tobillo", "Pie", "Muslo", "Pierna"])
-            
-        with col2:
-            lateralidad = st.selectbox("Lateralidad", ["Derecha", "Izquierda", "Bilateral"])
-            gravedad = st.selectbox("Gravedad", ["Leve", "Moderada", "Grave"])
-            dias_baja_estimado = st.number_input("Días de baja estimados", min_value=0, value=0)
-            mecanismo_lesion = st.selectbox("Mecanismo de lesión", ["Entrenamiento", "Partido", "Gimnasio", "Otro"])
-            tipo_tratamiento = st.multiselect("Tipo(s) de tratamiento", ["Fisioterapia", "Medicación", "Gimnasio", "Cirugía", "Reposo", "Readaptación"])
-            personal_reporta = st.text_input("Personal médico que reporta")
-            fecha_alta_diagnostico = st.date_input("Fecha estimada de alta (diagnóstico)", datetime.date.today())
-            fecha_alta_lesion = st.date_input("Fecha de alta real de la lesión", datetime.date.today())
-            descripcion = st.text_area("Descripción (texto libre)")
-
-        submitted = st.form_submit_button("Registrar Lesión")
-        if submitted:
-            if jugadora_seleccionada == 'Seleccionar Jugadora':
-                st.error("Por favor, selecciona una jugadora.")
-                return
-
-            tratamientos_str = ", ".join(tipo_tratamiento) if tipo_tratamiento else ""
-
-            # Asegúrate de que este orden coincida EXACTAMENTE con los encabezados de tu hoja de Google Sheets
-            new_row = [
-                jugadora_seleccionada, # Campo de jugadora
-                posicion,
-                fecha_lesion.strftime("%d/%m/%Y"),
-                estado_lesion,
-                tipo_lesion,
-                zona_cuerpo,
-                lateralidad,
-                gravedad,
-                dias_baja_estimado,
-                mecanismo_lesion,
-                tratamientos_str, 
-                personal_reporta,
-                fecha_alta_diagnostico.strftime("%d/%m/%Y"),
-                fecha_alta_lesion.strftime("%d/%m/%Y"),
-                descripcion
-            ]
-            registrar_lesion(new_row)
-
-# --- VISTA DEL FORMULARIO DE EDICIÓN (Solo para Administrador) ---
 
 def view_editar_registro(df_lesiones):
     st.subheader("Editar Registro de Lesión ✏️")
@@ -250,44 +141,3 @@ def view_editar_registro(df_lesiones):
                 
                 # 2. Llamar a la función de edición
                 editar_registro(df_lesiones, gsheets_row_index, updated_row_data)
-
-
-#######################################################################################
-# --- LÓGICA DE NAVEGACIÓN PRINCIPAL ---
-
-
-# 2. Cargar datos para el Dashboard y Edición
-df_lesiones = get_data_from_gsheets()
-
-if not df_lesiones.empty:
-    st.markdown(f"### Dashboard ({perfil_seleccionado})")
-    
-    # 3. Mostrar el Dashboard de Lesiones (Visible para todos)
-    st.dataframe(df_lesiones.drop(columns=['ID']), use_container_width=True)
-else:
-    st.warning("No se pudo cargar la información de lesiones. Revisa la conexión/permisos.")
-
-
-st.markdown("---")
-
-
-# 4. Control de Vistas por Perfil
-
-if perfil_seleccionado == "Médico/Reporte":
-    view_registro_lesion() # Solo ve el formulario de registro
-
-elif perfil_seleccionado == "Administrador":
-    # El administrador puede ver el formulario de registro y la opción de editar
-    st.subheader("Opciones de Administrador")
-    
-    opcion_admin = st.radio(
-        "Seleccionar Tarea:", 
-        ("Registrar Nueva Lesión", "Editar/Actualizar Registro"),
-        key="admin_task"
-    )
-    
-    if opcion_admin == "Registrar Nueva Lesión":
-        view_registro_lesion()
-    
-    elif opcion_admin == "Editar/Actualizar Registro":
-        view_editar_registro(df_lesiones)
