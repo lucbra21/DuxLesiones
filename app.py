@@ -25,8 +25,6 @@ WORKSHEET_NAME = 'Tabla I invent jugadores' # Asegúrate de que este nombre sea 
 
 records = get_records_df()  # Carga y cachea los datos
 
-#st.dataframe(records)
-
 # === Filtros ===
 periodo = st.radio("Agrupar por:", ["Semana", "Mes"], horizontal=True)
 
@@ -116,7 +114,7 @@ with col2:
     )
 with col3:
     st.metric(
-        f"Zona superior: {zona_top}",
+        f"Zona más afectada: {zona_top}",
         f"{zona_count} cases",
         f"{delta_zona:+.1f}%",
         chart_data=chart_zonas,

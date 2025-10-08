@@ -15,7 +15,7 @@ JUGADORAS_JSON = os.path.join(DATA_DIR, "jugadoras.jsonl")
 PARTES_CUERPO_JSON = os.path.join(DATA_DIR, "partes_cuerpo.jsonl")
 REGISTROS_JSONL = os.path.join(DATA_DIR, "registros.jsonl")
 
-#st.text(f"BASE_DIR: {BASE_DIR}")
+#st.text(f"BASE_DIR: {DATA_DIR}")
 
 def _ensure_data_dir():
     """
@@ -148,6 +148,7 @@ def get_records_df() -> pd.DataFrame:
     - fecha (datetime)
     - fecha_dia (date)
     """
+
     recs = _read_all_records()
     if not recs:
         return pd.DataFrame()
