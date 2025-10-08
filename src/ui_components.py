@@ -57,8 +57,7 @@ def view_registro_lesion():
         
     descripcion = st.text_area("Descripción")
         
-    #st.info("Asegúrate de que la hoja de Google Sheets no esté protegida o que las credenciales sean correctas.")
-    tratamientos_str = ", ".join(tipo_tratamiento) if tipo_tratamiento else ""
+    tratamientos_str = tipo_tratamiento if isinstance(tipo_tratamiento, list) else []
 
     # Asegúrate de que este orden coincida EXACTAMENTE con los encabezados de tu hoja de Google Sheets
     # Construimos el diccionario de la lesión
