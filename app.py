@@ -147,8 +147,7 @@ with col3:
 # st.line_chart(
 #     trend_fecha,
 #     x="fecha_alta_diagnostico",
-#     y="count",
-#     use_container_width=True,
+#     y="count"
 # )
 
 def editar_registro(df_original, row_id, new_data):
