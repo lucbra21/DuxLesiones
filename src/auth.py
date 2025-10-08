@@ -144,13 +144,15 @@ def menu():
 
         st.page_link("app.py", label="Inicio", icon=":material/home:")
         st.subheader("Modo :material/dashboard:")
-        st.page_link("pages/registro.py", label="Registro", icon=":material/article_person:")
+        st.page_link("pages/registro.py", label="Registrar Lesion", icon=":material/article_person:")
+        st.page_link("pages/historico.py", label="Historico", icon=":material/fact_check:")
         st.page_link("pages/reporte.py", label="Reporte individual", icon=":material/finance:")
-
+        
+        
         if st.session_state["auth"]["rol"] == "developer":
             st.page_link("pages/admin.py", label="Admin", icon=":material/app_registration:")
         
-        #st.page_link("pages/checkin.py", label="Check-in", icon=":material/fact_check:")
+        
         #st.page_link("pages/rpe.py", label="RPE", icon=":material/lab_profile:")
 
         btnSalir = st.button("Cerrar Sesión", type="tertiary", icon=":material/logout:")
