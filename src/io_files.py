@@ -14,6 +14,7 @@ DATA_DIR = os.path.join(BASE_DIR, "data")
 JUGADORAS_JSON = os.path.join(DATA_DIR, "jugadoras.jsonl")
 PARTES_CUERPO_JSON = os.path.join(DATA_DIR, "partes_cuerpo.jsonl")
 REGISTROS_JSONL = os.path.join(DATA_DIR, "registros.jsonl")
+COMPETICIONES_JSONL = os.path.join(DATA_DIR, "competiciones.jsonl")
 
 #st.text(f"BASE_DIR: {DATA_DIR}")
 
@@ -28,6 +29,30 @@ def _ensure_data_dir():
     It does not raise an error if the directory already exists.
     """
     os.makedirs("data", exist_ok=True)
+
+def load_competiciones() -> tuple[pd.DataFrame | None, str | None]:
+    """
+    Carga jugadoras desde archivo JSON. Se esperan las claves: id_jugadora, nombre_jugadora
+
+    Returns:
+        tuple: (DataFrame o None, mensaje de error o None)
+    """
+    _ensure_data_dir()
+    if not os.path.exists(COMPETICIONES_JSONL):
+        return None, f"No se encontró {COMPETICIONES_JSONL}. Descarga y coloca el archivo."
+
+    try:
+        with open(COMPETICIONES_JSONL, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        df = pd.DataFrame(data)
+        #df = df[df["activo"] == 1]
+        df = df.sort_values("nombre")
+
+        return df, None
+
+    except Exception as e:
+        return None, f"Error leyendo jugadoras.json: {e}"
 
 def load_jugadoras() -> tuple[pd.DataFrame | None, str | None]:
     """
@@ -45,9 +70,8 @@ def load_jugadoras() -> tuple[pd.DataFrame | None, str | None]:
             data = json.load(f)
 
         df = pd.DataFrame(data)
-        expected = {"id_jugadora", "nombre_jugadora"}
-        if not expected.issubset(df.columns.astype(str)):
-            return None, f"Las columnas deben ser: {sorted(list(expected))}."
+        df = df[df["activo"] == 1]
+        df = df.sort_values("nombre")
 
         return df, None
 
