@@ -25,6 +25,10 @@ WORKSHEET_NAME = 'Tabla I invent jugadores' # Asegúrate de que este nombre sea 
 
 records = get_records_df()  # Carga y cachea los datos
 
+if records.empty:    
+    st.warning("No hay datos de lesiones disponibles.")
+    st.stop()   
+
 # === Filtros ===
 periodo = st.radio("Agrupar por:", ["Semana", "Mes"], horizontal=True)
 
