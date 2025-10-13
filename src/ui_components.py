@@ -1,20 +1,17 @@
 import streamlit as st
 import datetime
-from src.io_files import load_jugadoras, upsert_jsonl, load_competiciones
+from src.io_files import load_jugadoras, upsert_jsonl, load_competiciones, get_records_df
+import pandas as pd
 
 def view_registro_lesion():
+
+    records = get_records_df() 
 
     # Lista de jugadoras predefinidas
     jug_df, jug_error = load_jugadoras()
     comp_df, comp_error = load_competiciones()
     
-    #st.dataframe(comp_df)
-    
-    #jugadoras_options = jug_df.to_dict("records")
-    
-    #with st.form("lesion_form", border=False):
-        
-    # Organiza el formulario en dos columnas
+    # Organiza el formulario en columnas
     col1, col2, col3 = st.columns([2,1,1])
 
     with col1:
@@ -52,8 +49,6 @@ def view_registro_lesion():
             #index=None
         )
         
-
-
     st.divider()
 
     col1, col2, col3, col4 = st.columns(4)
@@ -136,14 +131,26 @@ def view_registro_lesion():
         
     tratamientos_str = tipo_tratamiento if isinstance(tipo_tratamiento, list) else []
 
-    # Asegúrate de que este orden coincida EXACTAMENTE con los encabezados de tu hoja de Google Sheets
-    # Construimos el diccionario de la lesión
+    #st.dataframe(jugadora_seleccionada)
+
+    if jugadora_seleccionada and isinstance(jugadora_seleccionada, dict):
+        nombre_completo = (jugadora_seleccionada["nombre"] + " " + jugadora_seleccionada["apellido"]).upper()
+        id_jugadora = jugadora_seleccionada["identificacion"]
+
+        # Construimos el diccionario de la lesión
+        fecha_str = fecha_lesion.strftime("%Y-%m-%d")
+
+        # Ejemplo de uso
+        nuevo_id = generar_id_lesion(nombre_completo, id_jugadora, records)
+        #st.text(f"Nuevo ID generado: {nuevo_id}")
+
     record = {
-        "id_jugadora": jugadora_seleccionada["identificacion"],
-        "nombre": jugadora_seleccionada["nombre"],
+        "id_lesion": nuevo_id,
+        "id_jugadora": id_jugadora,
+        #"nombre": nombre_completo,
         "fecha_hora": datetime.datetime.now().isoformat(),
         "posicion": posicion,
-        "fecha_lesion": fecha_lesion.strftime("%Y-%m-%d"),
+        "fecha_lesion": fecha_str,
         "lugar": lugar,
         "zona_cuerpo": zona_cuerpo,
         "zona_especifica": zona_especifica,
@@ -157,6 +164,7 @@ def view_registro_lesion():
         "fecha_alta_diagnostico": fecha_alta_diagnostico.strftime("%Y-%m-%d"),
         "fecha_alta_lesion": None,
         #"fecha_alta_lesion": fecha_alta_lesion.strftime("%Y-%m-%d"),
+        "estado_lesion": "Activo",
         "diagnostico": diagnostico,
         "descripcion": descripcion,
     }
@@ -173,10 +181,11 @@ def view_registro_lesion():
         if jugadora_seleccionada == 'Seleccionar Jugadora':
             st.error("Por favor, selecciona una jugadora.")
             return
+        
         upsert_jsonl(record)
 
         # Set flash message to show after rerun
-        st.session_state["flash"] = "Registro guardado/actualizado correctamente en data/registros.jsonl"
+        st.session_state["flash"] = f"Registro {nuevo_id} guardado/actualizado correctamente en data/registros.jsonl"
         # Clear form state by reloading
         st.rerun()
 
@@ -197,3 +206,35 @@ def preview_record(record: dict) -> None:
         import json
 
         st.code(json.dumps(record, ensure_ascii=False, indent=2), language="json")
+
+
+def generar_id_lesion(nombre: str, id_jugadora: int, df: pd.DataFrame, fecha: str | None = None) -> str:
+    """
+    Genera un identificador único de lesión para una jugadora.
+    Formato: <INICIALES><YYYYMMDD>-<INCREMENTAL>
+    
+    - nombre: Nombre completo de la jugadora
+    - id_jugadora: ID numérico único de la jugadora
+    - df: DataFrame con registros previos de lesiones
+    - fecha: Fecha opcional (formato 'YYYYMMDD'). Si no se pasa, usa la actual.
+    """
+    # --- Obtener iniciales (todas las palabras) ---
+    partes = nombre.strip().split()
+    iniciales = "".join(p[0].upper() for p in partes if p)  # toma todas las iniciales
+
+    # --- Fecha ---
+    if fecha is None:
+        fecha = datetime.datetime.now().strftime("%Y%m%d")
+
+    #st.dataframe(df)
+    #st.text(id_jugadora)
+    if "id_jugadora" in df.columns:
+        previas = df[df["id_jugadora"] == id_jugadora]
+        numero = len(previas) + 1
+    else:
+        # Si no existe la columna, asumir que no hay lesiones previas
+        numero = 1
+
+    # --- Construir identificador ---
+    return f"{iniciales}{fecha}-{numero}"
+
