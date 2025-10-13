@@ -11,36 +11,60 @@ st.set_page_config(
     layout="wide" # Usa todo el ancho de la pantalla para los gráficos
 )
 
-# ----------------- PASO 1: FUNCIÓN DE CARGA DE DATOS -----------------
-# !!! CUIDADO: DEBES REEMPLAZAR ESTA FUNCIÓN CON TU CÓDIGO REAL DE CARGA DE DATOS !!!
-# Por ejemplo: leer un archivo CSV, consultar una base de datos o Google Sheets.
-# Asegúrate que los nombres de las columnas que lees sean:
-# 'Tipo_de_lesion', 'Zona_del_cuerpo', 'Lugar', 'Dias_de_baja_(estimados)'
+# ----------------- PASO 1: FUNCIÓN DE CARGA DE DATOS REALES (JSONL) -----------------
+
 @st.cache_data
 def load_data():
-    # --- CÓDIGO DE SIMULACIÓN (REEMPLAZAR) ---
-    data = {
-        'Jugadora': np.random.choice(['ADRIANA', 'CLAUDIA', 'MARIA', 'ANA'], size=50),
-        'Tipo_de_lesion': np.random.choice(['MUSCULAR', 'ARTICULAR', 'TENDINOSA', 'ÓSEA'], size=50),
-        'Zona_del_cuerpo': np.random.choice(['MUSLO', 'TOBILLO', 'RODILLA', 'ESPALDA', 'HOMBRO'], size=50),
-        'Lugar': np.random.choice(['ENTRENAMIENTO', 'PARTIDO', 'GIMNASIO', 'OTRO'], size=50),
-        'Fecha_de_la_lesion': pd.to_datetime(pd.date_range(start='2024-01-01', periods=50, freq='W')),
-        'Dias_de_baja_(estimados)': np.random.randint(5, 45, size=50), 
-        'Fecha_de_alta_(estimada)': pd.to_datetime(pd.date_range(start='2024-01-01', periods=50, freq='W')) + pd.to_timedelta(np.random.randint(5, 45, size=50), unit='D'),
-    }
-    df = pd.DataFrame(data)
-    # ----------------------------------------
     
-    # Columna clave para el cálculo del tiempo de baja. Usamos los días estimados.
-    df['dias_baja'] = df['Dias_de_baja_(estimados)'] 
+    # RUTA DE ARCHIVO CONFIRMADA: data/jugadoras.jsonl
+    DATA_FILE_PATH = "data/jugadoras.jsonl" 
     
-    return df
+    try:
+        # Usamos pandas.read_json con el argumento 'lines=True' para leer JSONL
+        df = pd.read_json(DATA_FILE_PATH, lines=True)
+
+        # Verificar que el DataFrame no esté vacío
+        if df.empty:
+            st.warning("El archivo JSONL se leyó correctamente, pero está vacío. No hay datos para graficar.")
+            return pd.DataFrame() 
+
+        # --- Limpieza y Preparación de Datos ---
+        
+        # 1. Convierte la columna de días estimados a número.
+        df['Dias_de_baja_(estimados)'] = pd.to_numeric(
+            df['Dias_de_baja_(estimados)'], 
+            errors='coerce' # Convierte cualquier valor no numérico a NaN
+        )
+        
+        # 2. Columna clave para los cálculos de tiempo promedio
+        df['dias_baja'] = df['Dias_de_baja_(estimados)'] 
+
+        # 3. Rellena NaNs en columnas categóricas para evitar errores en gráficos
+        df['Tipo_de_lesion'] = df['Tipo_de_lesion'].fillna('Desconocido')
+        df['Zona_del_cuerpo'] = df['Zona_del_cuerpo'].fillna('Desconocido')
+        df['Lugar'] = df['Lugar'].fillna('Desconocido')
+        
+        return df
+
+    except FileNotFoundError:
+        st.error(f"Error: No se encontró el archivo de datos JSONL en la ruta: {DATA_FILE_PATH}.")
+        return pd.DataFrame()
+    except Exception as e:
+        st.error(f"Error al procesar el archivo JSONL. Verifica el formato de los datos: {e}")
+        return pd.DataFrame()
 
 df = load_data()
 
+
+# Si la carga de datos falló, detenemos la ejecución del resto del script.
+if df.empty:
+    st.stop()
+
+
 # ----------------- PASO 2: CÁLCULO DE KPIS RESUMEN -----------------
 
-tiempo_promedio = df['dias_baja'].mean() if not df.empty else 0
+# Calculamos el promedio solo de los valores no nulos
+tiempo_promedio = df['dias_baja'].mean() 
 total_lesiones = len(df)
 
 # ----------------- PASO 3: INTERFAZ Y VISUALIZACIÓN -----------------
@@ -55,6 +79,7 @@ with col1:
     st.metric(label="Total de Lesiones Registradas", value=f"{total_lesiones}")
 
 with col2:
+    # Usamos 1f para mostrar un decimal en el promedio
     st.metric(label="Tiempo Promedio de Baja (Estimado)", value=f"{tiempo_promedio:,.1f} días")
 
 # --- Fila 2: Gráficos de Distribución (Dos Columnas de Ancho) ---
