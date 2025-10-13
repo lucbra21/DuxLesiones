@@ -145,6 +145,10 @@ def menu():
         st.page_link("app.py", label="Inicio", icon=":material/home:")
         st.subheader("Modo :material/dashboard:")
         st.page_link("pages/registro.py", label="Registrar Lesion", icon=":material/article_person:")
+        
+        # 🛑 LÍNEA AÑADIDA PARA TU DASHBOARD 🛑
+        st.page_link("pages/epidemiologia.py", label="Epidemiología", icon=":material/monitor_heart:") 
+        
         st.page_link("pages/historico.py", label="Historico", icon=":material/fact_check:")
         st.page_link("pages/reporte.py", label="Reporte individual", icon=":material/finance:")
         
