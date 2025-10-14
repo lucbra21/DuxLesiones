@@ -140,10 +140,7 @@ def upsert_jsonl(record: dict) -> None:
     def same_lesion(a: dict, b: dict) -> bool:
         """Compara todos los campos excepto personal_reporta y descripcion"""
         keys_to_compare = [
-            "id_jugadora", "nombre_jugadora", "fecha_lesion", "posicion",
-            "estado_lesion", "zona_cuerpo", "lateralidad", "tipo_lesion",
-            "gravedad", "dias_baja_estimado", "mecanismo_lesion",
-            "tipo_tratamiento", "fecha_alta_diagnostico", "fecha_alta_lesion"
+            "id_lesion", "id_jugadora", "fecha_lesion", "posicion", "zona_cuerpo", "lateralidad", "tipo_lesion", "gravedad"
         ]
         return all(a.get(k) == b.get(k) for k in keys_to_compare)
 
@@ -156,9 +153,10 @@ def upsert_jsonl(record: dict) -> None:
 
     if idx_to_update is not None:
         # Si existe, actualizamos solo los campos informativos
-        records[idx_to_update]["personal_reporta"] = record.get("personal_reporta", "")
-        records[idx_to_update]["descripcion"] = record.get("descripcion", "")
-        records[idx_to_update]["fecha_hora"] = datetime.datetime.now().isoformat()
+        records[idx_to_update]["evolucion"] = record.get("evolucion", "")
+        records[idx_to_update]["fecha_alta_lesion"] = record.get("fecha_alta_lesion", "")
+        records[idx_to_update]["estado_lesion"] = record.get("estado_lesion", "")
+        #records[idx_to_update]["fecha_hora"] = datetime.datetime.now().isoformat()
     else:
         # Si no existe, lo añadimos
         records.append(record)
@@ -178,11 +176,11 @@ def get_records_df() -> pd.DataFrame:
         return pd.DataFrame()
     df = pd.DataFrame(recs)
     # Parse fecha_hora
-    try:
-        df["fecha"] = pd.to_datetime(df["fecha_hora"], errors="coerce")
-        df["fecha_dia"] = df["fecha"].dt.date
-    except Exception:
-        pass
+    #try:
+    #    df["fecha"] = pd.to_datetime(df["fecha_hora"], errors="coerce")
+    #    df["fecha_dia"] = df["fecha"].dt.date
+    #except Exception:
+    #    pass
     return df
 
 def append_jsonl(record: dict) -> None:

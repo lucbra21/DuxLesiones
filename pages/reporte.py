@@ -3,7 +3,10 @@ import src.config as config
 config.init_config()
 
 from src.auth import init_app_state, login_view, menu, validate_login
-from src.io_files import get_records_df, load_jugadoras, load_competiciones
+from src.io_files import get_records_df
+from src.ui_components import data_filters
+from src.util import get_photo
+
 init_app_state()
 validate_login()
 
@@ -16,44 +19,30 @@ st.header("Reporte de :red[Lesiones]", divider=True)
 
 menu()
 
-# Lista de jugadoras predefinidas
-jug_df, jug_error = load_jugadoras()
-comp_df, comp_error = load_competiciones()
+jugadora_seleccionada, posicion = data_filters()
 
-# Organiza el formulario en columnas
-col1, col2, col3 = st.columns([2,1,1])
+st.divider()
 
-with col1:
-    competiciones_options = comp_df.to_dict("records")
-    competicion = st.selectbox(
-        "Competición",
-        options=competiciones_options,
-        format_func=lambda x: f'{x["nombre"]} ({x["codigo"]})',
-        placeholder="Seleccione una Competición",
-        #index=None
-    )
+
+if jugadora_seleccionada and isinstance(jugadora_seleccionada, dict):
+    nombre_completo = (jugadora_seleccionada["nombre"] + " " + jugadora_seleccionada["apellido"]).upper()
+    id_jugadora = jugadora_seleccionada["identificacion"]
+    posicion = jugadora_seleccionada["posicion"]
+    records = get_records_df() 
+else:
+    st.info("Selecciona una jugadora para continuar.")
+    st.stop()
+
+if id_jugadora == "X2486103X":
+
+    col1, col2 = st.columns([1,2])
     
-with col2:
-    posicion = st.selectbox("Posición", ["PORTERA", "DEFENSA", "CENTRO", "DELANTERA"],
-    placeholder="Seleccione una Posición",
-    #index=None
-    )
-    
-with col3:
-    if competicion:
-        codigo_competicion = competicion["codigo"]
-        jug_df_filtrado = jug_df[jug_df["competicion"] == codigo_competicion]
+    with col1:
+        response = get_photo("https://ligaf.es/media/images/2026/img_players/144992.jpg")
+        if response and response.status_code == 200 and 'image' in response.headers.get("Content-Type", ""):
+            st.image(response.content, width=250)
 
-        # Convertir el DataFrame filtrado a lista de opciones
-        jugadoras_filtradas = jug_df_filtrado.to_dict("records")
-    else:
-        jugadoras_filtradas = jug_df.to_dict("records")
+    with col2:
+        st.text(f"**Jugadora:** {nombre_completo}  \n**ID:** {id_jugadora}  \n**Posición:** {posicion}")
 
-    # La nueva columna para el nombre de la jugadora
-    jugadora_seleccionada = st.selectbox(
-        "Jugadora",
-        options=jugadoras_filtradas,
-        format_func=lambda x: f'{jugadoras_filtradas.index(x) + 1} - {x["nombre"]} {x["apellido"]}',
-        placeholder="Seleccione una Jugadora",
-        #index=None
-    )
+
