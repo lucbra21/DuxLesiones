@@ -144,12 +144,10 @@ def menu():
         st.page_link("pages/registro.py", label="Registrar Lesión", icon=":material/article_person:")
         st.page_link("pages/seguimiento.py", label="Seguimiento", icon=":material/fact_check:")
         st.page_link("pages/reporte.py", label="Reporte individual", icon=":material/finance:")
-        st.page_link("pages/epidemiologia.py", label="Epiemiologia", icon=":material/favorite:")
-        
+        st.page_link("pages/epidemiologia.py", label="Epidemiologia", icon=":material/favorite:")
         
         if st.session_state["auth"]["rol"] == "developer":
             st.page_link("pages/admin.py", label="Admin", icon=":material/app_registration:")
-        
         
         #st.page_link("pages/rpe.py", label="RPE", icon=":material/lab_profile:")
 
