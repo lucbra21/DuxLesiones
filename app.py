@@ -13,6 +13,7 @@ validate_login()
 
 # Authentication gate
 if not st.session_state["auth"]["is_logged_in"]:
+    #st.text("🔐 Por favor, inicie sesión para acceder a esta página.")
     login_view()
     st.stop()
 
@@ -45,7 +46,7 @@ else:
 
 # === Métricas base ===
 total_lesiones = len(records)
-activas = records[records["estado_lesion"] == "Activo"].shape[0]
+activas = records[records["estado_lesion"] == "ACTIVO"].shape[0]
 porcentaje_activas = round((activas / total_lesiones) * 100, 1)
 promedio_dias_baja = round(records["dias_baja_estimado"].mean(), 1)
 zona_top = records["zona_cuerpo"].mode()[0]
@@ -58,7 +59,7 @@ zona_pct = round((zona_count / total_lesiones) * 100, 1)
 trend_total = records.groupby("periodo").size().reset_index(name="cantidad")
 
 trend_activas = (
-    records[records["estado_lesion"] == "Activo"]
+    records[records["estado_lesion"] == "ACTIVO"]
     .groupby("periodo")
     .size()
     .reset_index(name="count")
@@ -205,7 +206,7 @@ def view_editar_registro(df_lesiones):
                 
                 new_posicion = st.selectbox("Posición", ["Portera", "Defensa", "Medio centro", "Delantera"], index=["Portera", "Defensa", "Medio centro", "Delantera"].index(fila_actual.get('Posicion', 'Defensa')))
                 new_fecha_lesion = st.date_input("Fecha de la lesión", pd.to_datetime(fila_actual.get('Fecha Lesion', datetime.date.today()), format='%d/%m/%Y', errors='coerce'), key='edit_fecha_lesion')
-                new_estado_lesion = st.selectbox("Estado de la lesión", ["Activo", "Inactivo"], index=["Activo", "Inactivo"].index(fila_actual.get('Estado Lesion', 'Activo')))
+                new_estado_lesion = st.selectbox("Estado de la lesión", ["ACTIVO", "INACTIVO"], index=["ACTIVO", "INACTIVO"].index(fila_actual.get('Estado Lesion', 'ACTIVO')))
                 new_tipo_lesion = st.selectbox("Tipo de lesión", ["Muscular", "Ósea", "Tendinosa", "Articular", "Ligamentosa", "Contusión"], index=["Muscular", "Ósea", "Tendinosa", "Articular", "Ligamentosa", "Contusión"].index(fila_actual.get('Tipo Lesion', 'Muscular')))
                 new_zona_cuerpo = st.selectbox("Zona del cuerpo", ["Cabeza", "Cuello", "Tronco", "Hombro", "Codo", "Muñeca", "Mano", "Cadera", "Ingle", "Rodilla", "Tobillo", "Pie", "Muslo", "Pierna"], index=["Cabeza", "Cuello", "Tronco", "Hombro", "Codo", "Muñeca", "Mano", "Cadera", "Ingle", "Rodilla", "Tobillo", "Pie", "Muslo", "Pierna"].index(fila_actual.get('Zona Cuerpo', 'Rodilla')))
 

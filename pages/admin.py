@@ -104,7 +104,7 @@ def generar_lesiones_aleatorias(
         raise ValueError(f"No se encontraron jugadoras válidas en {jugadoras_path}")
 
     # --- Listas de opciones según tu app ---
-    estados = ["Activo", "Inactivo"]
+    estados = ["ACTIVO", "INACTIVO"]
     zonas = ["Cabeza", "Cuello", "Tronco", "Hombro", "Codo", "Muñeca", "Mano",
              "Cadera", "Ingle", "Rodilla", "Tobillo", "Pie", "Muslo", "Pierna"]
     gravedades = ["Leve", "Moderada", "Grave"]

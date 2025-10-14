@@ -4,7 +4,7 @@ import src.config as config
 config.init_config()
 
 from src.io_files import get_records_df, load_jugadoras, upsert_jsonl, load_competiciones
-
+from src.ui_components import view_registro_lesion
 from src.auth import init_app_state, login_view, menu, validate_login
 init_app_state()
 validate_login()
@@ -24,7 +24,7 @@ if records.empty:
     st.warning("No hay datos de lesiones disponibles.")
     st.stop()   
     
-records["fecha_alta_diagnostico"] = pd.to_datetime(records["fecha_alta_diagnostico"], errors="coerce")
+#records["fecha_alta_diagnostico"] = pd.to_datetime(records["fecha_alta_diagnostico"], errors="coerce")
 
 jug_df, jug_error = load_jugadoras()
 comp_df, comp_error = load_competiciones()
@@ -38,7 +38,7 @@ with col1:
         options=competiciones_options,
         format_func=lambda x: f'{x["nombre"]} ({x["codigo"]})',
         placeholder="Seleccione una Competición",
-        #index=None
+        index=3
     )
     #jugadoras = sorted(records["nombre"].dropna().unique())
     #selected_jugadora = st.selectbox("Filtrar por jugadora", ["Todas"] + jugadoras)
@@ -62,49 +62,28 @@ with col2:
         placeholder="Seleccione una Jugadora",
         index=None
     )
-    # Filtro por rango de fechas
-    # min_fecha = records["fecha_alta_diagnostico"].min()
-    # max_fecha = records["fecha_alta_diagnostico"].max()
-    # fecha_inicio, fecha_fin = st.date_input(
-    #     "Rango de fechas (diagnóstico)",
-    #     [min_fecha, max_fecha]
-    # )
+    
+    if jugadora_seleccionada:
+        nombre_completo = (jugadora_seleccionada["nombre"] + " " + jugadora_seleccionada["apellido"]).upper()
+        records = records[records["id_jugadora"] == jugadora_seleccionada["identificacion"]]
 
 with col3:
+    #if jugadora_seleccionada:
     tipos = sorted(records["tipo_lesion"].dropna().unique())
-    selected_tipo = st.selectbox("Tipo de lesión", ["Todas"] + tipos)
 
-# with col4:
-#     gravedades = sorted(records["gravedad"].dropna().unique())
-#     selected_gravedad = st.selectbox("Gravedad", ["Todas"] + gravedades)
+    selected_tipo = st.selectbox("Tipo de lesión", ["Todas"] + tipos, disabled=jugadora_seleccionada is None)
+
+    if selected_tipo and selected_tipo != "Todas":
+        records = records[records["tipo_lesion"] == selected_tipo]
+
+st.divider()
+
+if not jugadora_seleccionada:
+    st.info("Selecciona una jugadora para continuar.")
+    st.stop()
 
 
-# === Aplicar filtros dinámicamente ===
-filtered = records.copy()
-
-#if jugadora_seleccionada != "Todas":
-if jugadora_seleccionada and isinstance(jugadora_seleccionada, dict):
-    nombre_completo = (jugadora_seleccionada["nombre"] + " " + jugadora_seleccionada["apellido"]).upper()
-    #st.text(f"Mostrando lesiones de: {nombre_completo}")
-    filtered = filtered[filtered["id_jugadora"] == jugadora_seleccionada["identificacion"]]
-
-#if selected_tipo != "Todas":
-#    filtered = filtered[filtered["tipo_lesion"] == selected_tipo]
-
-# if selected_gravedad != "Todas":
-#     filtered = filtered[filtered["gravedad"] == selected_gravedad]
-
-# filtered = filtered[
-#     (filtered["fecha_alta_diagnostico"].dt.date >= fecha_inicio)
-#     & (filtered["fecha_alta_diagnostico"].dt.date <= fecha_fin)
-# ]
-
-# === Mostrar resultado ===
-st.markdown(f"**{len(filtered)} lesiones encontradas**")
-
-# Añadir una columna "Acción" con enlaces dinámicos
-#filtered["Acción"] = filtered["id_jugadora"].apply(lambda x: f"https://example.com/editar?id={x}")
-disabled_cols = [col for col in filtered.columns]
+#disabled_cols = [col for col in filtered.columns]
 
 columnas_excluir = [
     "id_jugadora",
@@ -114,16 +93,38 @@ columnas_excluir = [
     "diagnostico",
     "descripcion",
     "fecha",
-    "fecha_dia"
+    "fecha_dia",
+    "evolucion",
+    "mecanismo_lesion",
+    "dias_baja_estimado",
+    "fecha_alta_lesion",
+    "fecha_alta_diagnostico",
+    "fecha_hora_registro"
 ]
 
-# --- eliminar columnas si existen ---
-df_filtrado = filtered.drop(columns=[col for col in columnas_excluir if col in filtered.columns])
+if records.empty:
+    st.warning("No hay datos que mostrar para la jugadora seleccionada.")
+    st.stop()
 
+# === Mostrar resultado ===
+st.markdown(f"**{len(records)} lesiones encontradas**")
+
+# --- eliminar columnas si existen ---
+df_filtrado = records.drop(columns=[col for col in columnas_excluir if col in records.columns])
+
+orden = ["fecha_lesion", "id_lesion", "lugar", "zona_cuerpo", "zona_especifica", "lateralidad", "tipo_lesion", "tipo_especifico", "gravedad", "personal_reporta", "estado_lesion"]
+df_filtrado = df_filtrado[orden + [c for c in df_filtrado.columns if c not in orden]]
+
+df_filtrado = df_filtrado.sort_values("fecha_lesion")
+df_filtrado.reset_index(drop=True, inplace=True)
 
 st.dataframe(df_filtrado)
 
-input_id = st.text_input("Introduce el ID de la lesion:", placeholder="Ejemplo: AJB20251013-4")
+st.divider()
+col1, col2 = st.columns([1,2])
+
+with col1:
+    input_id = st.text_input("Introduce el ID de la lesion:", placeholder="Ejemplo: AJB20251013-4")
 
 # Si se introduce un ID y se presiona Enter
 if input_id:
@@ -137,7 +138,8 @@ if input_id:
     lesion = records.loc[records["id_lesion"] == id_buscar]
 
     if not lesion.empty:
-        zona = lesion.iloc[0]["zona_cuerpo"]
-        st.success(f"Zona del Cuerpo: **{zona}**")
+        lesion_data = lesion.iloc[0].to_dict()
+        
+        view_registro_lesion(modo="editar", jugadora_seleccionada=jugadora_seleccionada, lesion_data=lesion_data)
     else:
-        st.error("No se encontró ninguna jugadora con ese ID.")
+        st.error("No se encontró ninguna lesion con ese ID.")

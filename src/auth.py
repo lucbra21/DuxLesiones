@@ -141,8 +141,8 @@ def menu():
 
         st.page_link("app.py", label="Inicio", icon=":material/home:")
         st.subheader("Modo :material/dashboard:")
-        st.page_link("pages/registro.py", label="Registrar Lesion", icon=":material/article_person:")
-        st.page_link("pages/historico.py", label="Seguimiento", icon=":material/fact_check:")
+        st.page_link("pages/registro.py", label="Registrar Lesión", icon=":material/article_person:")
+        st.page_link("pages/seguimiento.py", label="Seguimiento", icon=":material/fact_check:")
         st.page_link("pages/reporte.py", label="Reporte individual", icon=":material/finance:")
         
         
