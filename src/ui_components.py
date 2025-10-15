@@ -154,7 +154,7 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_seleccionada: str = None,
         try:
             idx_gravedad = list(gravedad_dias.keys()).index(lesion_data["gravedad"])
         except ValueError:
-            idx_gravedad = 0 
+            idx_gravedad = None
 
         if fecha_alta_lesion:
             alta_medica_value = True
@@ -208,27 +208,27 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_seleccionada: str = None,
     else:
         fecha_lesion_date = datetime.date.today()
         fecha_alta_diagnostico_date = datetime.date.today()
-        idx_zonas = 0 
-        idx_lugar = 0 
-        idx_mecanismo = 0 
-        idx_lateralidad = 0 
-        idx_tipos_lesion = 0 
-        idx_gravedad = 0 
-        idx_zona_espec = 0 
+        idx_zonas = None
+        idx_lugar = None
+        idx_mecanismo = None
+        idx_lateralidad = None
+        idx_tipos_lesion = None
+        idx_gravedad = None
+        idx_zona_espec = None
         diagnostico_text = ""
         descripcion_text = ""
         personal_reporte_text = ""
         dias_baja = 0
         tratamientos_default = []
-        idx_tipo_especifico = 0
+        idx_tipo_especifico = None
         
     col1, col2, col3, col4, col5 = st.columns(5)
     with col1:
         fecha_lesion = st.date_input("Fecha de la lesión", fecha_lesion_date, disabled=disabled_edit)
         fecha_str = fecha_lesion.strftime("%Y-%m-%d")
-        zona_cuerpo = st.selectbox("Zona del cuerpo", list(zonas_anatomicas.keys()), index=idx_zonas, disabled=disabled_edit, accept_new_options=True)
+        zona_cuerpo = st.selectbox("Zona del cuerpo", list(zonas_anatomicas.keys()), index=idx_zonas, disabled=disabled_edit, accept_new_options=True, placeholder="Selecciona una opción")
     with col2:
-        lugar = st.selectbox("Lugar", lugares, index=idx_lugar, disabled=disabled_edit, accept_new_options=True)
+        lugar = st.selectbox("Lugar", lugares, index=idx_lugar, disabled=disabled_edit, accept_new_options=True, placeholder="Selecciona una opción")
 
         subregiones = zonas_anatomicas.get(zona_cuerpo, [])
         if subregiones:
@@ -239,7 +239,7 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_seleccionada: str = None,
                 except ValueError:
                     idx_zona_espec = 0
                 
-            zona_especifica = st.selectbox("Región anatómica específica:", subregiones, index=idx_zona_espec, key="subregion", disabled=disabled_edit)
+            zona_especifica = st.selectbox("Región anatómica específica:", subregiones, index=idx_zona_espec, key="subregion", disabled=disabled_edit, placeholder="Selecciona una opción")
         else:
             zona_especifica = st.selectbox(
                 "Región anatómica específica:",
@@ -248,39 +248,42 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_seleccionada: str = None,
                 disabled=True
             )
     with col3:
-        mecanismo_lesion = st.selectbox("Mecanismo de lesión", mecanismos, index=idx_mecanismo, disabled=disabled_edit, accept_new_options=True)
-        lateralidad = st.selectbox("Lateralidad", lateralidades, index=idx_lateralidad, disabled=disabled_edit)
+        mecanismo_lesion = st.selectbox("Mecanismo de lesión", mecanismos, index=idx_mecanismo, disabled=disabled_edit, accept_new_options=True, placeholder="Selecciona una opción")
+        lateralidad = st.selectbox("Lateralidad", lateralidades, index=idx_lateralidad, disabled=disabled_edit, placeholder="Selecciona una opción")
     with col4:
-        tipo_lesion = st.selectbox("Tipo de lesión", list(tipos_lesion.keys()), index=idx_tipos_lesion, disabled=disabled_edit, accept_new_options=True, help=lesion_help)
+        tipo_lesion = st.selectbox("Tipo de lesión", list(tipos_lesion.keys()), index=idx_tipos_lesion, disabled=disabled_edit, accept_new_options=True, help=lesion_help, placeholder="Selecciona una opción")
         
         gravedad = st.selectbox(
             "Gravedad",
             list(gravedad_dias.keys()),
             help="Clasificación basada en el estándar UEFA (Fuller et al., 2006)",
             index=idx_gravedad,
-            disabled=disabled_edit
+            disabled=disabled_edit, placeholder="Selecciona una opción"
         )  
     with col5:
         subtipos = tipos_lesion.get(tipo_lesion, [])
 
-        if modo == "editar":
-            try:
-                idx_tipo_especifico = subtipos.index(lesion_data["tipo_especifico"])
-            except ValueError:
-                idx_tipo_especifico = 0
-        tipo_especifico = st.selectbox("Tipo específico", subtipos, index=idx_tipo_especifico, disabled=disabled_edit, help=lesion_help)
-
-
-    rango = gravedad_dias[gravedad]
-    texto_rango = ":material/calendar_clock: **Duración estimada de baja:**"
-
-    if rango[1] is not None:
-        texto_rango = texto_rango + f" entre {rango[0]} y {rango[1]} días."
-    else:
-        texto_rango = f":material/calendar_clock: **Duración estimada de baja:** más de {rango[0]} días."
+        if subtipos:
+            if modo == "editar":
+                try:
+                    idx_tipo_especifico = subtipos.index(lesion_data["tipo_especifico"])
+                except ValueError:
+                    idx_tipo_especifico = 0
+            tipo_especifico = st.selectbox("Tipo específico", subtipos, index=idx_tipo_especifico, disabled=disabled_edit, help=lesion_help, placeholder="Selecciona una opción")
+        else:
+            tipo_especifico = st.selectbox("Tipo específico", ["NO APLICA"], disabled=True, help=lesion_help)
         
-    if modo != "editar":
-        st.info(f"{texto_rango}")
+    if gravedad:
+        rango = gravedad_dias[gravedad]
+        texto_rango = ":material/calendar_clock: **Duración estimada de baja:**"
+
+        if rango[1] is not None:
+            texto_rango = texto_rango + f" entre {rango[0]} y {rango[1]} días."
+        else:
+            texto_rango = f":material/calendar_clock: **Duración estimada de baja:** más de {rango[0]} días."
+            
+        if modo != "editar":
+            st.info(f"{texto_rango}")
 
     diagnostico = st.text_area("Diagnóstico Médico",value=diagnostico_text, disabled=disabled_edit)
 
@@ -361,15 +364,15 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_seleccionada: str = None,
             #"nombre": nombre_completo,
             "posicion": posicion,
             "fecha_lesion": fecha_str,
-            "lugar": lugar.upper(),
-            "zona_cuerpo": zona_cuerpo.upper(),
+            "lugar": lugar.upper() if lugar else lugar,
+            "zona_cuerpo": zona_cuerpo.upper() if zona_cuerpo else zona_cuerpo,
             "zona_especifica": zona_especifica,
-            "lateralidad": lateralidad.upper(),
-            "tipo_lesion": tipo_lesion.upper(),
-            "tipo_especifico": tipo_especifico.upper(),
+            "lateralidad": lateralidad,
+            "tipo_lesion": tipo_lesion.upper() if tipo_lesion else tipo_lesion,
+            "tipo_especifico": tipo_especifico.upper() if tipo_especifico else tipo_especifico,
             "gravedad": gravedad,
             "dias_baja_estimado": dias_baja_estimado,
-            "mecanismo_lesion": mecanismo_lesion.upper(),
+            "mecanismo_lesion": mecanismo_lesion.upper() if mecanismo_lesion else mecanismo_lesion,
             "tipo_tratamiento": tratamientos_str,
             "personal_reporta": personal_reporta,
             "fecha_alta_diagnostico": fecha_alta_diagnostico.strftime("%Y-%m-%d"),
