@@ -6,6 +6,8 @@ config.init_config()
 from src.io_files import get_records_df, load_jugadoras, upsert_jsonl, load_competiciones
 from src.ui_components import view_registro_lesion
 from src.auth import init_app_state, login_view, menu, validate_login
+from src.util import clean_df
+
 init_app_state()
 validate_login()
 
@@ -82,26 +84,6 @@ if not jugadora_seleccionada:
     st.info("Selecciona una jugadora para continuar.")
     st.stop()
 
-
-#disabled_cols = [col for col in filtered.columns]
-
-columnas_excluir = [
-    "id_jugadora",
-    "fecha_hora",
-    "posicion",
-    "tipo_tratamiento",
-    "diagnostico",
-    "descripcion",
-    "fecha",
-    "fecha_dia",
-    "evolucion",
-    "mecanismo_lesion",
-    "dias_baja_estimado",
-    "fecha_alta_lesion",
-    "fecha_alta_diagnostico",
-    "fecha_hora_registro"
-]
-
 if records.empty:
     st.warning("No hay datos que mostrar para la jugadora seleccionada.")
     st.stop()
@@ -109,14 +91,7 @@ if records.empty:
 # === Mostrar resultado ===
 st.markdown(f"**{len(records)} lesiones encontradas**")
 
-# --- eliminar columnas si existen ---
-df_filtrado = records.drop(columns=[col for col in columnas_excluir if col in records.columns])
-
-orden = ["fecha_lesion", "id_lesion", "lugar", "zona_cuerpo", "zona_especifica", "lateralidad", "tipo_lesion", "tipo_especifico", "gravedad", "personal_reporta", "estado_lesion"]
-df_filtrado = df_filtrado[orden + [c for c in df_filtrado.columns if c not in orden]]
-
-df_filtrado = df_filtrado.sort_values("fecha_lesion")
-df_filtrado.reset_index(drop=True, inplace=True)
+df_filtrado = clean_df(records)
 
 st.dataframe(df_filtrado)
 

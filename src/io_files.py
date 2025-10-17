@@ -154,7 +154,8 @@ def upsert_jsonl(record: dict) -> None:
     if idx_to_update is not None:
         # Si existe, actualizamos solo los campos informativos
         records[idx_to_update]["evolucion"] = record.get("evolucion", "")
-        records[idx_to_update]["fecha_alta_lesion"] = record.get("fecha_alta_lesion", "")
+        records[idx_to_update]["fecha_alta_medica"] = record.get("fecha_alta_medica", "")
+        records[idx_to_update]["fecha_alta_deportiva"] = record.get("fecha_alta_deportiva", "")
         records[idx_to_update]["estado_lesion"] = record.get("estado_lesion", "")
         #records[idx_to_update]["fecha_hora"] = datetime.datetime.now().isoformat()
     else:
@@ -172,16 +173,68 @@ def get_records_df() -> pd.DataFrame:
     """
 
     recs = _read_all_records()
+    jug_df, jug_error = load_jugadoras()
+
     if not recs:
         return pd.DataFrame()
     df = pd.DataFrame(recs)
-    # Parse fecha_hora
-    #try:
-    #    df["fecha"] = pd.to_datetime(df["fecha_hora"], errors="coerce")
-    #    df["fecha_dia"] = df["fecha"].dt.date
-    #except Exception:
-    #    pass
+   
     return df
+
+def get_records_plus_players_df() -> pd.DataFrame:
+    """Return all registros as a pandas DataFrame. If none, returns empty DF.
+
+    Adds helper columns:
+    - fecha (datetime)
+    - fecha_dia (date)
+    - nombre_completo (joined from jugadoras)
+    """
+
+    # --- Leer registros y jugadoras ---
+    recs = _read_all_records()
+    jug_df, jug_error = load_jugadoras()
+
+    # --- Validar registros ---
+    if not recs:
+        return pd.DataFrame()
+
+    df = pd.DataFrame(recs)
+
+    # --- Añadir columna nombre_completo ---
+    if (
+        jug_df is not None
+        and not jug_df.empty
+        and "identificacion" in jug_df.columns
+        and "nombre" in jug_df.columns
+        and "apellido" in jug_df.columns
+        and "id_jugadora" in df.columns
+    ):
+        # Normalizar formatos
+        jug_df["identificacion"] = jug_df["identificacion"].astype(str).str.strip().str.upper()
+        df["id_jugadora"] = df["id_jugadora"].astype(str).str.strip().str.upper()
+
+        # Crear mapa {identificacion: nombre completo}
+        map_nombres = dict(
+            zip(
+                jug_df["identificacion"],
+                jug_df["nombre"].fillna("") + " " + jug_df["apellido"].fillna(""),
+            )
+        )
+
+        # Mapear nombres al df de registros
+        df["nombre_jugadora"] = df["id_jugadora"].map(map_nombres).fillna("")
+
+        # Reordenar columnas: nombre_completo justo después de id_jugadora
+        cols = df.columns.tolist()
+        if "id_jugadora" in cols and "nombre_jugadora" in cols:
+            idx = cols.index("id_jugadora") + 1
+            cols.insert(idx, cols.pop(cols.index("nombre_jugadora")))
+            df = df[cols]
+    else:
+        df["nombre_jugadora"] = ""
+
+    return df
+
 
 def append_jsonl(record: dict) -> None:
     """Append a dict as one line of JSON to the registros.jsonl file."""
