@@ -149,10 +149,10 @@ def menu():
 
         st.page_link("pages/epidemiologia.py", label="Grupal", icon=":material/groups:")
 
-        if st.session_state["auth"]["rol"] == "developer":
-            st.subheader("Administración :material/settings:")
-            st.page_link("pages/admin.py", label="Simulador", icon=":material/app_registration:")
-            st.page_link("pages/files.py", label="Archivos", icon=":material/docs:")
+        #if st.session_state["auth"]["rol"] == "developer":
+        st.subheader("Administración :material/settings:")
+        #st.page_link("pages/admin.py", label="Simulador", icon=":material/app_registration:")
+        st.page_link("pages/files.py", label="Archivos", icon=":material/docs:")
         
         #st.page_link("pages/rpe.py", label="RPE", icon=":material/lab_profile:")
 

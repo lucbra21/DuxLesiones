@@ -25,6 +25,10 @@ menu()
 
 df = get_records_df()
 
+if df.empty:    
+    st.warning("No hay datos de lesiones disponibles.")
+    st.stop()   
+
 st.dataframe(df)
 
 csv_data = df.to_csv(index=False).encode("utf-8")
