@@ -159,10 +159,9 @@ def menu():
 
         if st.session_state["auth"]["rol"] == "admin":
             st.subheader("Administración :material/settings:")
-        #st.page_link("pages/admin.py", label="Simulador", icon=":material/app_registration:")
             st.page_link("pages/files.py", label="Registros", icon=":material/docs:")
-        
-        #st.page_link("pages/rpe.py", label="RPE", icon=":material/lab_profile:")
+            #st.page_link("pages/admin.py", label="Simulador", icon=":material/app_registration:")
+            #st.page_link("pages/rpe.py", label="RPE", icon=":material/lab_profile:")
 
         btnSalir = st.button("Cerrar Sesión", type="tertiary", icon=":material/logout:")
 
