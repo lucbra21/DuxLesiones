@@ -99,7 +99,10 @@ def data_filters(modo: int = 1):
             if selected_tipo and selected_tipo != "Todas":
                 records = records[records["tipo_lesion"] == selected_tipo]
 
-    return jugadora_seleccionada, posicion
+    if modo == 1:
+        return jugadora_seleccionada, posicion
+    else:
+        return jugadora_seleccionada, posicion, records
 
 
 def data_filters_advanced():
