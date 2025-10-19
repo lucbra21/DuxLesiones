@@ -15,8 +15,21 @@ JUGADORAS_JSON = os.path.join(DATA_DIR, "jugadoras.jsonl")
 PARTES_CUERPO_JSON = os.path.join(DATA_DIR, "partes_cuerpo.jsonl")
 REGISTROS_JSONL = os.path.join(DATA_DIR, "registros.jsonl")
 COMPETICIONES_JSONL = os.path.join(DATA_DIR, "competiciones.jsonl")
+USERS_FILE = os.path.join(DATA_DIR, "users.jsonl")
 
 #st.text(f"BASE_DIR: {DATA_DIR}")
+
+def _load_users() -> list[dict]:
+    """Carga lista de usuarios desde data/users.json."""
+    try:
+        with open(USERS_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        st.error("Archivo de usuarios no encontrado.")
+        return []
+    except json.JSONDecodeError:
+        st.error("Error al leer el archivo de usuarios.")
+        return []
 
 def _ensure_data_dir():
     """

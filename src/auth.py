@@ -3,6 +3,7 @@ import streamlit as st
 import jwt
 import time
 from st_cookies_manager import EncryptedCookieManager
+from src.io_files import _load_users
 
 # # --- CONFIG JWT ---
 JWT_SECRET = st.secrets.auth.jwt_secret
@@ -30,21 +31,23 @@ def ensure_session_defaults() -> None:
             "token": ""
         }
 
-def _get_credentials() -> tuple[str, str, str]:
-    """Load credentials from environment or fallback to hardcoded defaults.
+# def _get_credentials() -> tuple[str, str, str]:
+#     """Load credentials from environment or fallback to hardcoded defaults.
 
-    Environment variables (optional): TRAINER_USER, TRAINER_PASS
-    Defaults: admin / admin
-    """
-    user = st.secrets.db.username
-    pwd = st.secrets.db.password
-    rol = st.secrets.db.rol
-    return user, pwd, rol
+#     Environment variables (optional): TRAINER_USER, TRAINER_PASS
+#     Defaults: admin / admin
+#     """
+#     user = st.secrets.db.username
+#     pwd = st.secrets.db.password
+#     rol = st.secrets.db.rol
+#     return user, pwd, rol
 
 def login_view() -> None:
     """Render the login form and handle authentication."""
     
-    expected_user, expected_pass, rol = _get_credentials()
+    users = _load_users()
+
+    #expected_user, expected_pass, rol = _get_credentials()
     
     _, col2, _ = st.columns([2, 1.5, 2])
 
@@ -74,8 +77,13 @@ def login_view() -> None:
             submitted = st.form_submit_button("Iniciar sesión", type="primary")
 
         if submitted:
-            if username == expected_user and password == expected_pass:
-
+            user_data = next(
+            (u for u in users if u["username"] == username and u["password"] == password),
+            None
+)
+            #if username == expected_user and password == expected_pass:
+            if user_data:
+                rol = user_data["rol"]
                 token = create_jwt_token(username, rol)
                 cookies["auth_token"] = token
                 cookies.save()
@@ -149,12 +157,11 @@ def menu():
 
         st.page_link("pages/epidemiologia.py", label="Grupal", icon=":material/groups:")
 
-        #if st.session_state["auth"]["rol"] == "developer":
-        st.subheader("Administración :material/settings:")
-        #st.page_link("pages/admin.py", label="Simulador", icon=":material/app_registration:")
-        st.page_link("pages/files.py", label="Registros", icon=":material/docs:")
-        
-        #st.page_link("pages/rpe.py", label="RPE", icon=":material/lab_profile:")
+        if st.session_state["auth"]["rol"] == "admin":
+            st.subheader("Administración :material/settings:")
+            st.page_link("pages/files.py", label="Registros", icon=":material/docs:")
+            #st.page_link("pages/admin.py", label="Simulador", icon=":material/app_registration:")
+            #st.page_link("pages/rpe.py", label="RPE", icon=":material/lab_profile:")
 
         btnSalir = st.button("Cerrar Sesión", type="tertiary", icon=":material/logout:")
 

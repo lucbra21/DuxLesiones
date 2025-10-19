@@ -10,23 +10,28 @@
     "rol": "admin"
   },
   {
-    "username": "physio1",
+    "username": "physio",
     "password": "physio2025",
     "rol": "physio"
   },
   {
-    "username": "coach1",
+    "username": "coach",
     "password": "coachfit",
     "rol": "coach"
   },
   {
-    "username": "trainer1",
+    "username": "trainer",
     "password": "trainer123",
     "rol": "trainer"
   },
   {
-    "username": "player1",
+    "username": "player",
     "password": "playerpass",
     "rol": "player"
+  },
+    {
+    "username": "developer",
+    "password": "holamundo",
+    "rol": "developer"
   }
 ]
