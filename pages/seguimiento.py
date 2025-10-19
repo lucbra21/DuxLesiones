@@ -20,10 +20,10 @@ st.header("Seguimiento de :red[Lesiones]", divider="red")
 
 menu()
 
-jugadora_seleccionada, posicion = data_filters(modo=2)
+jugadora_seleccionada, posicion, records = data_filters(modo=2)
 st.divider()
 
-records = get_records_df()  # Carga y cachea los datos
+#records = get_records_df()  # Carga y cachea los datos
 
 if records.empty:    
     st.warning("No hay datos de lesiones disponibles.")
@@ -36,9 +36,9 @@ if not jugadora_seleccionada:
 nombre_completo = (jugadora_seleccionada["nombre"] + " " + jugadora_seleccionada["apellido"]).upper()
 records = records[records["id_jugadora"] == jugadora_seleccionada["identificacion"]]
 
-if records.empty:
-    st.warning("No hay datos que mostrar para la jugadora seleccionada.")
-    st.stop()
+# if records.empty:
+#     st.warning("No hay datos que mostrar para la jugadora seleccionada.")
+#     st.stop()
 
 # === Mostrar resultado ===
 st.markdown(f"**{len(records)} lesiones encontradas**")
