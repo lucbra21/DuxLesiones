@@ -22,9 +22,6 @@ st.header("Resumen de :red[Lesiones]", divider=True)
 
 menu()
 
-#SHEET_NAME = 'Propuesta tablas'
-WORKSHEET_NAME = 'Tabla I invent jugadores' # Asegúrate de que este nombre sea exacto
-
 records = get_records_plus_players_df()  # Carga y cachea los datos
 
 if records.empty:    

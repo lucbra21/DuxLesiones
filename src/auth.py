@@ -140,14 +140,19 @@ def menu():
         st.write(f"Hola **:blue-background[{st.session_state['auth']['username'].capitalize()}]** ")
 
         st.page_link("app.py", label="Inicio", icon=":material/home:")
-        st.subheader("Modo :material/dashboard:")
+        st.subheader("Gestión de Lesiones  :material/dashboard:")
         st.page_link("pages/registro.py", label="Registrar Lesión", icon=":material/article_person:")
         st.page_link("pages/seguimiento.py", label="Seguimiento", icon=":material/fact_check:")
-        st.page_link("pages/reporte.py", label="Reporte individual", icon=":material/finance:")
-        st.page_link("pages/epidemiologia.py", label="Epidemiologia", icon=":material/favorite:")
-        
+
+        st.subheader("Análisis y Estadísticas  :material/query_stats:")
+        st.page_link("pages/reporte.py", label="Individual", icon=":material/personal_injury:")
+
+        st.page_link("pages/epidemiologia.py", label="Grupal", icon=":material/groups:")
+
         if st.session_state["auth"]["rol"] == "developer":
-            st.page_link("pages/admin.py", label="Admin", icon=":material/app_registration:")
+            st.subheader("Administración :material/settings:")
+            st.page_link("pages/admin.py", label="Simulador", icon=":material/app_registration:")
+            st.page_link("pages/files.py", label="Archivos", icon=":material/docs:")
         
         #st.page_link("pages/rpe.py", label="RPE", icon=":material/lab_profile:")
 

@@ -4,7 +4,7 @@ import src.config as config
 config.init_config()
 
 from src.io_files import get_records_df, load_jugadoras, upsert_jsonl, load_competiciones
-from src.ui_components import view_registro_lesion
+from src.ui_components import view_registro_lesion, data_filters
 from src.auth import init_app_state, login_view, menu, validate_login
 from src.util import clean_df
 
@@ -20,69 +20,21 @@ st.header("Seguimiento de :red[Lesiones]", divider="red")
 
 menu()
 
+jugadora_seleccionada, posicion = data_filters(modo=2)
+st.divider()
+
 records = get_records_df()  # Carga y cachea los datos
 
 if records.empty:    
     st.warning("No hay datos de lesiones disponibles.")
     st.stop()   
     
-#records["fecha_alta_diagnostico"] = pd.to_datetime(records["fecha_alta_diagnostico"], errors="coerce")
-
-jug_df, jug_error = load_jugadoras()
-comp_df, comp_error = load_competiciones()
-
-col1, col2, col3 = st.columns([2,2,1])
-
-with col1:
-    competiciones_options = comp_df.to_dict("records")
-    competicion = st.selectbox(
-        "Competición",
-        options=competiciones_options,
-        format_func=lambda x: f'{x["nombre"]} ({x["codigo"]})',
-        placeholder="Seleccione una Competición",
-        index=3
-    )
-    #jugadoras = sorted(records["nombre"].dropna().unique())
-    #selected_jugadora = st.selectbox("Filtrar por jugadora", ["Todas"] + jugadoras)
-
-with col2:
-
-    if competicion:
-        codigo_competicion = competicion["codigo"]
-        jug_df_filtrado = jug_df[jug_df["competicion"] == codigo_competicion]
-
-        # Convertir el DataFrame filtrado a lista de opciones
-        jugadoras_filtradas = jug_df_filtrado.to_dict("records")
-    else:
-        jugadoras_filtradas = jug_df.to_dict("records")
-
-    # La nueva columna para el nombre de la jugadora
-    jugadora_seleccionada = st.selectbox(
-        "Jugadora",
-        options=jugadoras_filtradas,
-        format_func=lambda x: f'{jugadoras_filtradas.index(x) + 1} - {x["nombre"]} {x["apellido"]}',
-        placeholder="Seleccione una Jugadora",
-        index=None
-    )
-    
-    if jugadora_seleccionada:
-        nombre_completo = (jugadora_seleccionada["nombre"] + " " + jugadora_seleccionada["apellido"]).upper()
-        records = records[records["id_jugadora"] == jugadora_seleccionada["identificacion"]]
-
-with col3:
-    #if jugadora_seleccionada:
-    tipos = sorted(records["tipo_lesion"].dropna().unique())
-
-    selected_tipo = st.selectbox("Tipo de lesión", ["Todas"] + tipos, disabled=jugadora_seleccionada is None)
-
-    if selected_tipo and selected_tipo != "Todas":
-        records = records[records["tipo_lesion"] == selected_tipo]
-
-st.divider()
-
 if not jugadora_seleccionada:
     st.info("Selecciona una jugadora para continuar.")
     st.stop()
+
+nombre_completo = (jugadora_seleccionada["nombre"] + " " + jugadora_seleccionada["apellido"]).upper()
+records = records[records["id_jugadora"] == jugadora_seleccionada["identificacion"]]
 
 if records.empty:
     st.warning("No hay datos que mostrar para la jugadora seleccionada.")
