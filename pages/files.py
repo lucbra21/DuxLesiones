@@ -19,7 +19,7 @@ if not st.session_state["auth"]["is_logged_in"]:
     login_view()
     st.stop()
 
-st.header("Administrador de :red[Archivos]", divider=True)
+st.header("Administrador de :red[Registros]", divider=True)
 
 menu()
 
