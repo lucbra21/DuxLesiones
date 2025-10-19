@@ -2,31 +2,31 @@
 {
     "username": "marcelo",
     "password": "admin",
-    "role": "admin"
+    "rol": "admin"
   },
   {
     "username": "admin",
     "password": "admin",
-    "role": "admin"
+    "rol": "admin"
   },
   {
     "username": "physio1",
     "password": "physio2025",
-    "role": "physio"
+    "rol": "physio"
   },
   {
     "username": "coach1",
     "password": "coachfit",
-    "role": "coach"
+    "rol": "coach"
   },
   {
     "username": "trainer1",
     "password": "trainer123",
-    "role": "trainer"
+    "rol": "trainer"
   },
   {
     "username": "player1",
     "password": "playerpass",
-    "role": "player"
+    "rol": "player"
   }
 ]
