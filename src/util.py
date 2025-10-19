@@ -41,5 +41,32 @@ def clean_df(records):
 
     df_filtrado = df_filtrado.sort_values("fecha_lesion", ascending=False)
     df_filtrado.reset_index(drop=True, inplace=True)
-
+    df_filtrado.index = df_filtrado.index + 1
     return df_filtrado
+
+def get_drive_direct_url(url: str) -> str:
+    """
+    Convierte un enlace de Google Drive en un enlace directo para visualizar o descargar la imagen.
+
+    Args:
+        url (str): Enlace de Google Drive (por ejemplo, 'https://drive.google.com/file/d/.../view?usp=sharing')
+
+    Returns:
+        str: Enlace directo usable en st.image o <img src="...">
+    """
+    if not url:
+        return ""
+
+    # Detectar si contiene el patrón de ID
+    if "drive.google.com" not in url:
+        raise ValueError("La URL no parece ser de Google Drive")
+
+    # Buscar el ID del archivo
+    import re
+    match = re.search(r"/d/([a-zA-Z0-9_-]+)", url)
+    if not match:
+        raise ValueError("No se pudo extraer el ID del archivo de la URL")
+
+    file_id = match.group(1)
+    return f"https://drive.google.com/uc?export=view&id={file_id}"
+
