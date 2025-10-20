@@ -7,6 +7,8 @@ import pandas as pd
 import math
 import pandas as pd
 import numpy as np
+import json
+
 from src.util import get_photo, get_drive_direct_url
 
 def is_valid(value):
@@ -252,7 +254,7 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_seleccionada: str = None,
         fecha_alta_deportiva = lesion_data.get("fecha_alta_deportiva", None)
         
         disabled_evolution = True
-        st.warning(f"La lesion esta **'Inactiva'**, **fecha de alta médica:** {fecha_alta_medica}, **fecha de alta deportiva:** {fecha_alta_deportiva}. No se pueden editar los datos")
+        st.warning(f"La lesin esta **'Inactiva'**, **fecha de alta médica:** {fecha_alta_medica}, **fecha de alta deportiva:** {fecha_alta_deportiva}. No se pueden editar los datos")
 
     lesion_help ="Lesiones agrupadas según el tejido afectado y mecanismo (criterios FIFA/UEFA)."
     
@@ -771,8 +773,6 @@ def preview_record(record: dict) -> None:
     tipo = record.get("tipo_lesion", "-")
     #st.markdown(f"**Jugadora:** {jug}  |  **Fecha:** {fecha}  |  **Posicion:** {posicion}  |  **Tipo Lesión:** {tipo}")
     with st.expander("Ver registro JSON", expanded=False):
-        import json
-
         st.code(json.dumps(record, ensure_ascii=False, indent=2), language="json")
 
 

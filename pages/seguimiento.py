@@ -42,16 +42,15 @@ records = records[records["id_jugadora"] == jugadora_seleccionada["identificacio
 
 # === Mostrar resultado ===
 st.markdown(f"**{len(records)} lesiones encontradas**")
-
 df_filtrado = clean_df(records)
-
 st.dataframe(df_filtrado)
 
-st.divider()
+#st.divider()
+st.subheader("Añadir seguimiento", divider="red")
 col1, col2 = st.columns([1,2])
 
 with col1:
-    input_id = st.text_input("Introduce el ID de la lesion:", placeholder="Ejemplo: AJB20251013-4")
+    input_id = st.text_input("Introduce el ID de la lesión:", placeholder="Ejemplo: AJB20251013-4")
 
 # Si se introduce un ID y se presiona Enter
 if input_id:
@@ -66,7 +65,7 @@ if input_id:
 
     if not lesion.empty:
         lesion_data = lesion.iloc[0].to_dict()
-        
-        view_registro_lesion(modo="editar", jugadora_seleccionada=jugadora_seleccionada, lesion_data=lesion_data)
+        with st.expander(f"Registro médico de la lesión",expanded=True):
+            view_registro_lesion(modo="editar", jugadora_seleccionada=jugadora_seleccionada, lesion_data=lesion_data)
     else:
         st.error("No se encontró ninguna lesion con ese ID.")
