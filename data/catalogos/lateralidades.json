@@ -1,0 +1,7 @@
+{
+  "lateralidades": [
+    { "id": 1, "nombre": "DERECHA" },
+    { "id": 2, "nombre": "IZQUIERDA" },
+    { "id": 3, "nombre": "BILATERAL" }
+  ]
+}

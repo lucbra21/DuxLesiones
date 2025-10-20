@@ -1,0 +1,9 @@
+{
+  "gravedad_lesion": [
+    { "id": 1, "nombre": "LEVE", "dias_min": 1, "dias_max": 3, "tipo": "DÍAS DE BAJA" },
+    { "id": 2, "nombre": "MODERADA", "dias_min": 4, "dias_max": 7, "tipo": "DÍAS DE BAJA" },
+    { "id": 3, "nombre": "GRAVE", "dias_min": 8, "dias_max": 28, "tipo": "DÍAS DE BAJA" },
+    { "id": 4, "nombre": "MUY GRAVE", "dias_min": 29, "dias_max": null, "tipo": "DÍAS DE BAJA" },
+    { "id": 5, "nombre": "RECIDIVA", "dias_min": null, "dias_max": null, "tipo": "CLÍNICA" }
+  ]
+}

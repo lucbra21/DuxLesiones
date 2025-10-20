@@ -1,0 +1,14 @@
+{
+  "tratamientos": [
+    { "id": 1, "nombre": "CRIOTERAPIA", "categoria": "FÍSICA", "fase": "AGUDA" },
+    { "id": 2, "nombre": "TERMOTERAPIA", "categoria": "FÍSICA", "fase": "SUBAGUDA" },
+    { "id": 3, "nombre": "ELECTROTERAPIA", "categoria": "FÍSICA", "fase": "SUBAGUDA" },
+    { "id": 4, "nombre": "MASOTERAPIA / DRENAJE", "categoria": "MANUAL", "fase": "SUBAGUDA" },
+    { "id": 5, "nombre": "PUNCIÓN SECA", "categoria": "INVASIVA", "fase": "FUNCIONAL" },
+    { "id": 6, "nombre": "EJERCICIOS DE MOVILIDAD", "categoria": "EJERCICIO TERAPÉUTICO", "fase": "SUBAGUDA" },
+    { "id": 7, "nombre": "EJERCICIOS DE FUERZA", "categoria": "EJERCICIO TERAPÉUTICO", "fase": "FUNCIONAL" },
+    { "id": 8, "nombre": "TRABAJO PROPIOCEPTIVO", "categoria": "EJERCICIO TERAPÉUTICO", "fase": "FUNCIONAL" },
+    { "id": 9, "nombre": "TRABAJO DE CAMPO", "categoria": "REEDUCACIÓN DEPORTIVA", "fase": "RETORNO" },
+    { "id": 10, "nombre": "REEDUCACIÓN TÉCNICA / RETORNO PROGRESIVO", "categoria": "REEDUCACIÓN DEPORTIVA", "fase": "RETORNO" }
+  ]
+}
