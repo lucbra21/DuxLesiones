@@ -364,6 +364,7 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_seleccionada: str = None,
         idx_tipos_lesion = None
         es_recidiva_value = None
         idx_zona_espec = None
+        idx_tipo_recidiva = None    
         diagnostico_text = ""
         descripcion_text = ""
         personal_reporte_text = ""
