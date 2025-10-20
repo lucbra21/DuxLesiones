@@ -142,7 +142,7 @@ def validate_login():
 def menu():
     with st.sidebar:
         st.logo("assets/images/banner.png", size="large")
-        st.subheader("Entrenador :material/admin_panel_settings:")
+        st.subheader(f'Rol: {st.session_state["auth"]["rol"].capitalize()} :material/admin_panel_settings:')
         
         #st.write(f"Usuario: {st.session_state['auth']['username']}")
         st.write(f"Hola **:blue-background[{st.session_state['auth']['username'].capitalize()}]** ")
@@ -161,7 +161,9 @@ def menu():
             st.subheader("Administración :material/settings:")
             st.page_link("pages/files.py", label="Registros", icon=":material/docs:")
             #st.page_link("pages/admin.py", label="Simulador", icon=":material/app_registration:")
-            #st.page_link("pages/rpe.py", label="RPE", icon=":material/lab_profile:")
+        
+        if st.session_state["auth"]["rol"] == "developer":
+            st.page_link("pages/ficha_medica.py", label="Ficha Médica", icon=":material/lab_profile:")
 
         btnSalir = st.button("Cerrar Sesión", type="tertiary", icon=":material/logout:")
 

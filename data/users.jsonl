@@ -5,11 +5,6 @@
     "rol": "admin"
   },
   {
-    "username": "admin",
-    "password": "admin",
-    "rol": "admin"
-  },
-  {
     "username": "physio",
     "password": "physio2025",
     "rol": "physio"
