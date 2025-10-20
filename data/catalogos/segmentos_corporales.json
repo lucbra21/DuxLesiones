@@ -1,0 +1,7 @@
+{
+  "segmentos_corporales": [
+    { "id": 1, "nombre": "TREN SUPERIOR", "descripcion": "Extremidades y parte superior del cuerpo" },
+    { "id": 2, "nombre": "TRONCO / MEDIO", "descripcion": "Zona central del cuerpo" },
+    { "id": 3, "nombre": "TREN INFERIOR", "descripcion": "Extremidades inferiores" }
+  ]
+}

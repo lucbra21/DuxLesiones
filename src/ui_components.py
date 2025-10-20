@@ -10,6 +10,9 @@ import numpy as np
 import json
 
 from src.util import get_photo, get_drive_direct_url
+from src.schema import (segmentos_corporales, 
+                        zonas_por_segmento, zonas_anatomicas, tratamientos, lugares, mecanismos, 
+                        lateralidades, tipos_lesion, gravedad_dias, gravedad_clinica, tipos_recidiva)
 
 def is_valid(value):
     """Devuelve True si el valor no es None, vacío ni NaN."""
@@ -258,76 +261,6 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_seleccionada: str = None,
 
     lesion_help ="Lesiones agrupadas según el tejido afectado y mecanismo (criterios FIFA/UEFA)."
     
-    # Diccionario principal → subcategorías
-    segmentos_corporales = ["TREN SUPERIOR", "TRONCO / MEDIO", "TREN INFERIOR"]
-
-    zonas_por_segmento = {
-    "TREN SUPERIOR": ["HOMBRO", "BRAZO", "CODO", "ANTEBRAZO", "MUÑECA", "MANO", "CABEZA", "CUELLO"],
-    "TRONCO / MEDIO": ["CADERA", "PELVIS", "COLUMNA LUMBAR"],
-    "TREN INFERIOR": ["MUSLO", "PIERNA", "RODILLA", "TOBILLO", "PIE"]
-}
-    zonas_anatomicas = {
-        "MUSLO": ["ISQUIOTIBIALES", "CUÁDRICEPS", "ADUCTORES"],
-        "PIERNA": ["GEMELOS", "SÓLEO", "TIBIAL ANTERIOR"],
-        "RODILLA": ["LCA", "LCP", "MENISCO INTERNO", "MENISCO EXTERNO", "RÓTULA"],
-        "TOBILLO": ["LIGAMENTOS LATERALES", "PERONEOS", "TIBIAL POSTERIOR", "ASTRÁGALO"],
-        "PIE": ["FASCIA PLANTAR", "METATARSIANOS", "FALANGES"],
-        "CADERA": ["PSOAS", "GLÚTEO MEDIO", "ROTADORES INTERNOS"],
-        "PELVIS": ["PUBIS", "SINFISIS PÚBICA", "ISQUIOS PROXIMALES"],
-        "COLUMNA LUMBAR": ["PARAVERTEBRALES", "DISCOS INTERVERTEBRALES", "L5-S1"],
-        "HOMBRO": ["DELTOIDES", "MANGUITO ROTADOR", "CLAVÍCULA", "ACROMIOCLAVICULAR"],
-        "BRAZO": ["BÍCEPS", "TRÍCEPS"],
-        "CODO": ["EPICÓNDILO", "EPITRÓCLEA", "OLECRANON"],
-        "ANTEBRAZO": ["FLEXORES", "EXTENSORES", "PRONADORES"],
-        "MUÑECA": ["ESCAFOIDES", "RADIO DISTAL", "LIGAMENTOS CARPIANOS"],
-        "MANO": ["METACARPIANOS", "FALANGES", "PULGAR"],
-        "CABEZA": ["CRÁNEO", "CARA", "MANDÍBULA"],
-        "CUELLO": ["CERVICALES", "TRAPECIO SUPERIOR"],
-        "OTRO": ["ZONA NO ESPECIFICADA"]
-    }
-
-    tratamientos = [
-        "CRIOTERAPIA",
-        "TERMOTERAPIA",
-        "ELECTROTERAPIA",
-        "MASOTERAPIA / DRENAJE",
-        "PUNCIÓN SECA",
-        "EJERCICIOS DE MOVILIDAD",
-        "EJERCICIOS DE FUERZA",
-        "TRABAJO PROPIOCEPTIVO",
-        "TRABAJO DE CAMPO",
-        "REEDUCACIÓN TÉCNICA / RETORNO PROGRESIVO"
-    ]
-
-    lugares = ["ENTRENAMIENTO", "PARTIDO", "GIMNASIO", "OTRO"]
-    mecanismos = ["SIN CONTACTO", "CON CONTACTO", "SOBRECARGA O MICROTRAUMA REPETITIVO", "TORSIÓN O DESEQUILIBRIO", "GOLPE DIRECTO"]
-    lateralidades = ["DERECHA", "IZQUIERDA", "BILATERAL"]
-    #tipos_lesion = ["CONTUSIÓN", "DISTENSIÓN MUSCULAR", "ESGUINCE", "FRACTURA", "LACERACIÓN", "LESIÓN ARTICULAR", "LESIÓN LIGAMENTARIA", "LUXACIÓN / SUBLUXACIÓN", "ROTURA FIBRILAR", "TENDINOPATÍA", "OTRA"]
-
-    tipos_lesion = {
-        "MUSCULAR": ["CONTUSIÓN MUSCULAR", "DISTENSIÓN", "ROTURA FIBRILAR"],
-        "TENDINOSA": ["TENDINOPATÍA", "ROTURA TENDINOSA"],
-        "LIGAMENTARIA / ARTICULAR": ["ESGUINCE", "LESIÓN LIGAMENTARIA", "LUXACIÓN / SUBLUXACIÓN", "LESIÓN ARTICULAR"],
-        "ÓSEA": ["FRACTURA"],
-        "TRAUMÁTICA / SUPERFICIAL": ["LACERACIÓN", "CONTUSIÓN SUPERFICIAL"],
-        "OTRAS": ["OTRA"]
-    }
-
-    gravedad_dias = {
-        "LEVE": (1, 3),
-        "MODERADA": (4, 7),
-        "GRAVE": (8, 28),
-        "MUY GRAVE": (29, None)
-    }
-
-    gravedad_clinica = ["LEVE", "MODERADA", "GRAVE", "MUY GRAVE", "RECIDIVA"]
-    
-    tipos_recidiva = [
-        "TEMPRANA",
-        "TARDÍA",
-        "REMOTA"
-    ]
-
     if modo == "editar":
         fecha_lesion_date = datetime.date.fromisoformat(lesion_data["fecha_lesion"])
         fecha_alta_diagnostico_date = datetime.date.fromisoformat(lesion_data["fecha_alta_diagnostico"])
@@ -360,10 +293,12 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_seleccionada: str = None,
 
         tratamientos_default=[p for p in tratamientos_selected if p in tratamientos]
 
-        try:
-            idx_gravedad = list(gravedad_dias.keys()).index(lesion_data["gravedad_clinica"])
-        except ValueError:
-            idx_gravedad = None
+        # try:
+        #     idx_gravedad = list(gravedad_dias.keys()).index(lesion_data["gravedad_clinica"])
+        # except ValueError:
+        #     idx_gravedad = None
+
+        es_recidiva_value = lesion_data.get("es_recidiva")
 
         try:
             idx_segmento = None
@@ -411,11 +346,13 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_seleccionada: str = None,
             idx_tipos_lesion = list(tipos_lesion.keys()).index(lesion_data["tipo_lesion"])
 
         try:
-            idx_gravedad = None
-            if is_valid(lesion_data.get("gravedad")):
-                idx_gravedad = list(gravedad_dias.keys()).index(lesion_data["gravedad"])
+            idx_tipo_recidiva = None
+            if is_valid(lesion_data.get("tipo_recidiva")):
+                idx_tipo_recidiva = tipos_recidiva.index(lesion_data["tipo_recidiva"])
         except ValueError:
-            idx_gravedad = 0 
+            lugares.append(lesion_data["tipo_recidiva"])
+            idx_tipo_recidiva = tipos_recidiva.index(lesion_data["tipo_recidiva"])
+
 
     else:
         fecha_lesion_date = datetime.date.today()
@@ -425,7 +362,7 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_seleccionada: str = None,
         idx_mecanismo = None
         idx_lateralidad = None
         idx_tipos_lesion = None
-        idx_gravedad = None
+        es_recidiva_value = None
         idx_zona_espec = None
         diagnostico_text = ""
         descripcion_text = ""
@@ -498,42 +435,24 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_seleccionada: str = None,
         else:
             tipo_especifico = st.selectbox("Tipo específico", ["NO APLICA"], disabled=True, help=lesion_help)
         
-    diagnostico = st.text_area("Diagnóstico Médico", disabled=disabled_edit, key=f"diagnostico_{st.session_state['form_version']}")
+    diagnostico = st.text_area("Diagnóstico Médico", disabled=disabled_edit, value=diagnostico_text, key=f"diagnostico_{st.session_state['form_version']}")
 
-    col1, col2, col3 = st.columns([1,1,1])    
+    col1, col2, col3 = st.columns([1,2,2])    
 
     with col1:
-        gravedad_clinica = st.selectbox(
-            "Gravedad (Clasificación Clínica)", gravedad_clinica,
-            help="Clasificación clínica basada en impacto y recurrencia (adoptada por FIFA, UEFA e IOC)",
-            index=idx_gravedad, disabled=disabled_edit, placeholder="Selecciona una opción", key=f"gravedad_clinica_{st.session_state['form_version']}"
-        )  
-
+        es_recidiva = st.checkbox("Es Recidiva", value=es_recidiva_value, disabled=disabled_edit)
     with col2:
-        if gravedad_clinica and gravedad_clinica == "RECIDIVA":
-            es_recidiva = True
-        else:
-            es_recidiva = False
-            tipo_recidiva = ["NO APLICA"]
-
         tipo_recidiva = st.selectbox(
                 "Tipo de recidiva (según tiempo desde el alta anterior)",
                 options=tipos_recidiva if es_recidiva else ["NO APLICA"],
-                index=None,
-                disabled=True if not es_recidiva else False,
+                index=idx_tipo_recidiva,
+                disabled=True if not es_recidiva or disabled_edit else False,
+                help="Clasificación basada en la fisiología de la reparación tisular y en la evidencia epidemiológica de la UEFA y el IOC.",
                 placeholder=placeholder, key=f"tipo_recidiva_{st.session_state['form_version']}"
-            )
+        )
     
     with col3:
         fecha_alta_diagnostico = st.date_input("Alta Deportiva (estimada)", fecha_alta_diagnostico_date, disabled=disabled_edit, key=f"fecha_alta_diagnostico_{st.session_state['form_version']}")  
-
-    #------------------------------      
-    col1, col2 = st.columns([2,1])   
-    with col1:
-        tipo_tratamiento = st.multiselect("Tipo(s) de tratamiento", options=tratamientos, default=tratamientos_default, placeholder="Selecciona uno o más", max_selections=5, disabled=disabled_edit, accept_new_options=True, key=f"tipo_tratamiento_{st.session_state['form_version']}")
-    
-    with col2:
-        personal_reporta = st.text_input("Personal médico que reporta", value=personal_reporte_text, disabled=disabled_edit, key=f"personal_reporta_{st.session_state['form_version']}")
 
     if (fecha_alta_diagnostico - fecha_lesion).days < 0:
         error = True
@@ -571,6 +490,14 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_seleccionada: str = None,
 
             #if modo != "editar":    
             st.warning(f"{texto_rango}")
+
+    #------------------------------      
+    col1, col2 = st.columns([2,1])   
+    with col1:
+        tipo_tratamiento = st.multiselect("Tipo(s) de tratamiento", options=tratamientos, default=tratamientos_default, placeholder="Selecciona uno o más", max_selections=5, disabled=disabled_edit, accept_new_options=True, key=f"tipo_tratamiento_{st.session_state['form_version']}")
+    
+    with col2:
+        personal_reporta = st.text_input("Personal médico que reporta", value=personal_reporte_text, disabled=disabled_edit, key=f"personal_reporta_{st.session_state['form_version']}")
 
     descripcion = st.text_area("Observaciones / Descripción de la lesión", value=descripcion_text, disabled=disabled_edit, key=f"descripcion_{st.session_state['form_version']}")
     
@@ -678,7 +605,7 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_seleccionada: str = None,
             "lateralidad": lateralidad,
             "tipo_lesion": tipo_lesion.upper() if tipo_lesion else tipo_lesion,
             "tipo_especifico": tipo_especifico.upper() if tipo_especifico else tipo_especifico,
-            "gravedad_clinica": gravedad_clinica,
+            #"gravedad_clinica": gravedad_clinica,
             "es_recidiva": es_recidiva,
             "tipo_recidiva": tipo_recidiva,
             "dias_baja_estimado": dias_baja_estimado,
@@ -891,17 +818,17 @@ def player_block_dux(jugadora_seleccionada: dict, unavailable="N/A"):
         profile_image = "profile"
 
     # Bloque visual
-    st.markdown(f"## {nombre_completo} {genero_icono}")
-    st.markdown(f"##### **_:blue[Identificación:]_** _{id_jugadora}_ | **_:blue[País:]_** _{pais.upper()}_")
+    st.markdown(f"### {nombre_completo.capitalize()} {genero_icono}")
+    #st.markdown(f"##### **_:red[Identificación:]_** _{id_jugadora}_ | **_:red[País:]_** _{pais.upper()}_")
 
-    col1, col2, col3 = st.columns([2, 2, 2])
+    col1, col2, col3 = st.columns([1.6, 2, 2])
 
     with col1:
         if pd.notna(url_drive) and url_drive and url_drive != "No Disponible":
             direct_url = get_drive_direct_url(url_drive)
             response = get_photo(direct_url)
             if response and response.status_code == 200 and 'image' in response.headers.get("Content-Type", ""):
-                st.image(response.content, width=250)
+                st.image(response.content, width=300)
             else:
                 st.image(f"assets/images/{profile_image}.png", width=180)
         else:
@@ -911,16 +838,17 @@ def player_block_dux(jugadora_seleccionada: dict, unavailable="N/A"):
         #st.markdown(f"**:material/sports_soccer: Competición:** {competicion}")
         #st.markdown(f"**:material/cake: Fecha Nac.:** {fecha_nac}")
 
-        st.metric(label=f":material/sports_soccer: Competición", value=f"{competicion}", border=True)
-        st.metric(label=f":material/cake: F. Nacimiento", value=f"{fecha_nac}", border=True)
+        st.metric(label=f":red[:material/id_card: Identificación]", value=f"{id_jugadora}", border=True)
+        st.metric(label=f":red[:material/sports_soccer: Plantel]", value=f"{competicion}", border=True)
+        st.metric(label=f":red[:material/cake: F. Nacimiento]", value=f"{fecha_nac}", border=True)
                     
     with col3:
         #st.markdown(f"**:material/person: Posición:** {posicion.capitalize()}")
         #st.markdown(f"**:material/favorite: Edad:** {edad if edad != unavailable else 'N/A'} años")
 
-
-        st.metric(label=f":material/person: Posición", value=f"{posicion.capitalize()}", border=True)
-        st.metric(label=f":material/favorite: Edad", value=f"{edad if edad != unavailable else 'N/A'} años", border=True)
+        st.metric(label=f":red[:material/globe: País]", value=f"{pais.capitalize()}", border=True)
+        st.metric(label=f":red[:material/person: Posición]", value=f"{posicion.capitalize()}", border=True)
+        st.metric(label=f":red[:material/favorite: Edad]", value=f"{edad if edad != unavailable else 'N/A'} años", border=True)
           
     st.divider()
 

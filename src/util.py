@@ -86,7 +86,7 @@ def grafico_evolucion_lesiones(df: pd.DataFrame):
         df.sort_values("fecha_lesion"),
         x="fecha_lesion",
         y="dias_baja_estimado",
-        color="gravedad_clinica",
+        color="impacto_dias_baja_estimado",
         size="dias_baja_estimado",
         hover_data=["tipo_lesion", "zona_cuerpo", "mecanismo_lesion"],
         color_discrete_sequence=px.colors.qualitative.Safe,
@@ -171,20 +171,20 @@ def grafico_tratamientos(df: pd.DataFrame):
     return fig
 
 def grafico_dias_baja(df: pd.DataFrame):
-    """Boxplot que muestra la distribución de días de baja por nivel de gravedad clínica."""
+    """Boxplot que muestra la distribución de días de baja por nivel de impacto o severidad."""
     if df.empty:
         return None
 
     fig = px.box(
         df,
-        x="gravedad_clinica",
+        x="impacto_dias_baja_estimado",
         y="dias_baja_estimado",
-        color="gravedad_clinica",
-        title="Días de baja según gravedad clínica",
+        color="impacto_dias_baja_estimado",
+        title="Días de baja según impacto o severidad",
         color_discrete_sequence=px.colors.qualitative.Safe
     )
     fig.update_layout(
-        xaxis_title="Gravedad clínica",
+        xaxis_title="Impacto o Severidad",
         yaxis_title="Días de baja",
         template="simple_white",
         height=400

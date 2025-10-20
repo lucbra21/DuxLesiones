@@ -53,6 +53,14 @@ zona_pct = round((zona_count / total_lesiones) * 100, 1)
 
 # === Series por periodo ===
 
+trend_total = records.groupby("periodo").size().reset_index(name="cantidad")
+chart_total = trend_total["cantidad"].tolist()
+
+# Calcular delta para el total de lesiones
+delta_total = 0
+if len(chart_total) > 1 and chart_total[-2] != 0:
+    delta_total = round(((chart_total[-1] - chart_total[-2]) / chart_total[-2]) * 100, 1)
+
 # Total de lesiones por periodo (para el gráfico principal)
 trend_total = records.groupby("periodo").size().reset_index(name="cantidad")
 
@@ -92,8 +100,20 @@ delta_activas = calc_delta(chart_activas)
 delta_dias = calc_delta(chart_dias)
 delta_zona = calc_delta(chart_zonas)
 
-col1, col2, col3 = st.columns(3)
+col1, col2, col3, col4 = st.columns(4)
+
 with col1:
+    st.metric(
+        "Total de lesiones registradas",
+        total_lesiones,
+        f"{delta_total:+.1f}%",
+        chart_data=chart_total,
+        chart_type="area",
+        border=True,
+        delta_color="normal",
+        help=f"Variación del número total de lesiones comparado con {articulo} {periodo.lower()}."
+    )
+with col2:
     st.metric(
         "Lesiones activas",
         activas,
@@ -104,7 +124,7 @@ with col1:
         delta_color="inverse",  # 🔴 if increased, 🟢 if decreased
         help=f"Variación en las lesiones activas en comparación con {articulo} {periodo.lower()}."
     )
-with col2:
+with col3:
     st.metric(
         "Días de recuperación promedio",
         promedio_dias_baja,
@@ -115,7 +135,7 @@ with col2:
         delta_color="normal",  # 🟢 increase = longer recovery
         help=f"Variación del tiempo promedio de recuperación por {periodo.lower()}."
     )
-with col3:
+with col4:
     st.metric(
         f"Zona más afectada: {zona_top}",
         f"{zona_count} cases",
@@ -134,7 +154,7 @@ with col3:
 #         help="Zone with highest injury frequency"
 #     )
 
-st.divider()
+#st.divider()
 
 st.subheader("Ultimas :red[lesiones]")
 df_filtrado = clean_df(ultimos)

@@ -1,0 +1,7 @@
+{
+  "tipos_recidiva": [
+    { "id": 1, "nombre": "TEMPRANA" },
+    { "id": 2, "nombre": "TARDÍA" },
+    { "id": 3, "nombre": "REMOTA" }
+  ]
+}

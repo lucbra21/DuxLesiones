@@ -1,0 +1,22 @@
+{
+  "tipos_lesion": [
+    { "id": 1, "categoria": "MUSCULAR", "nombre": "CONTUSIÓN MUSCULAR" },
+    { "id": 2, "categoria": "MUSCULAR", "nombre": "DISTENSIÓN" },
+    { "id": 3, "categoria": "MUSCULAR", "nombre": "ROTURA FIBRILAR" },
+
+    { "id": 4, "categoria": "TENDINOSA", "nombre": "TENDINOPATÍA" },
+    { "id": 5, "categoria": "TENDINOSA", "nombre": "ROTURA TENDINOSA" },
+
+    { "id": 6, "categoria": "LIGAMENTARIA / ARTICULAR", "nombre": "ESGUINCE" },
+    { "id": 7, "categoria": "LIGAMENTARIA / ARTICULAR", "nombre": "LESIÓN LIGAMENTARIA" },
+    { "id": 8, "categoria": "LIGAMENTARIA / ARTICULAR", "nombre": "LUXACIÓN / SUBLUXACIÓN" },
+    { "id": 9, "categoria": "LIGAMENTARIA / ARTICULAR", "nombre": "LESIÓN ARTICULAR" },
+
+    { "id": 10, "categoria": "ÓSEA", "nombre": "FRACTURA" },
+
+    { "id": 11, "categoria": "TRAUMÁTICA / SUPERFICIAL", "nombre": "LACERACIÓN" },
+    { "id": 12, "categoria": "TRAUMÁTICA / SUPERFICIAL", "nombre": "CONTUSIÓN SUPERFICIAL" },
+
+    { "id": 13, "categoria": "OTRAS", "nombre": "OTRA" }
+  ]
+}
