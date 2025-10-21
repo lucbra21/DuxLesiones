@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import datetime
 
 import src.config as config
 config.init_config()

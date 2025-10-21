@@ -5,9 +5,14 @@
     "rol": "admin"
   },
   {
-    "username": "physio",
-    "password": "physio2025",
-    "rol": "physio"
+    "username": "victoria",
+    "password": "fisioCrack!",
+    "rol": "fisio"
+  },
+  {
+    "username": "marina",
+    "password": "fisioChampions.",
+    "rol": "fisio"
   },
   {
     "username": "coach",

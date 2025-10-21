@@ -1,7 +1,7 @@
 import time
 import streamlit as st
 import datetime
-from src.io_files import load_jugadoras, upsert_jsonl, load_competiciones, get_records_df
+from src.io_files import load_jugadoras, upsert_jsonl, load_competiciones, get_records_df, load_catalog_list
 import pandas as pd
 
 import math
@@ -9,10 +9,7 @@ import pandas as pd
 import numpy as np
 import json
 
-from src.util import get_photo, get_drive_direct_url
-from src.schema import (segmentos_corporales, 
-                        zonas_por_segmento, zonas_anatomicas, tratamientos, lugares, mecanismos, 
-                        lateralidades, tipos_lesion, gravedad_dias, gravedad_clinica, tipos_recidiva)
+from src.util import get_photo, get_drive_direct_url, debe_deshabilitar_subtipo
 
 def is_valid(value):
     """Devuelve True si el valor no es None, vacío ni NaN."""
@@ -27,61 +24,53 @@ def is_valid(value):
     return True
 
 def data_filters(modo: int = 1):
-    # Lista de jugadoras predefinidas
     jug_df, jug_error = load_jugadoras()
 
-    if jug_df is None or "competicion" not in jug_df.columns:
-        st.error("❌ No se pudo cargar la lista de jugadoras o falta la columna 'competicion'.")
+    if jug_df is None or "plantel" not in jug_df.columns:
+        st.error("❌ No se pudo cargar la lista de jugadoras o falta la columna 'plantel'.")
         st.stop()
     
     comp_df, comp_error = load_competiciones()
     
-    # Organiza el formulario en columnas
     if modo == 1:
         col1, col2, col3 = st.columns([2,1,2])
-    elif modo == 2:
+    else:
         records = get_records_df() 
-
         if records.empty:    
             st.warning("No hay datos de lesiones disponibles.")
             st.stop()   
-
         col1, col2, col3, col4 = st.columns([2,1,2,1])
 
     with col1:
         competiciones_options = comp_df.to_dict("records")
-
         competicion = st.selectbox(
             "Plantel",
             options=competiciones_options,
             format_func=lambda x: f'{x["nombre"]} ({x["codigo"]})',
-            placeholder="Seleccione una Competición",
-            index=3
+            placeholder="Seleccione un plantel",
+            index=3,
         )
         
     with col2:
-        posicion = st.selectbox("Posición", ["PORTERA", "DEFENSA", "CENTRO", "DELANTERA"],
-        placeholder="Seleccione una Posición",
-        index=None
+        posicion = st.selectbox(
+            "Posición",
+            ["PORTERA", "DEFENSA", "CENTRO", "DELANTERA"],
+            placeholder="Seleccione una Posición",
+            index=None
         )
         
     with col3:
         if competicion:
             codigo_competicion = competicion["codigo"]
-            jug_df_filtrado = jug_df[jug_df["competicion"] == codigo_competicion]
-
-            # Convertir el DataFrame filtrado a lista de opciones
-            jugadoras_filtradas = jug_df_filtrado
+            jug_df_filtrado = jug_df[jug_df["plantel"] == codigo_competicion]
         else:
-            jugadoras_filtradas = jug_df
+            jug_df_filtrado = jug_df
 
         if posicion:
-            jugadoras_filtradas = jugadoras_filtradas[jugadoras_filtradas["posicion"] == posicion]
+            jug_df_filtrado = jug_df_filtrado[jug_df_filtrado["posicion"] == posicion]
 
-        # Convertir el DataFrame filtrado a lista de opciones
-        jugadoras_filtradas = jugadoras_filtradas.to_dict("records")
+        jugadoras_filtradas = jug_df_filtrado.to_dict("records")
 
-        # La nueva columna para el nombre de la jugadora
         jugadora_seleccionada = st.selectbox(
             "Jugadora",
             options=jugadoras_filtradas,
@@ -89,33 +78,63 @@ def data_filters(modo: int = 1):
             placeholder="Seleccione una Jugadora",
             index=None
         )
-        
-    if modo == 2:
+
+    if modo >= 2:
         with col4:
-
+            # Filtrado por jugadora seleccionada
             if jugadora_seleccionada:
-                nombre_completo = (jugadora_seleccionada["nombre"] + " " + jugadora_seleccionada["apellido"]).upper()
                 records = records[records["id_jugadora"] == jugadora_seleccionada["identificacion"]]
-                #st.text(nombre_completo)
-            tipos = sorted(records["tipo_lesion"].dropna().unique())
+            else:
+                if modo == 2:
+                    records = pd.DataFrame()
+                elif modo == 3:
+                    # modo >= 3 → filtrar por todas las jugadoras del plantel o posición
+                    if not jug_df_filtrado.empty and "identificacion" in jug_df_filtrado.columns:
+                        ids_validos = jug_df_filtrado["identificacion"].astype(str).tolist()
+                        records = records[records["id_jugadora"].astype(str).isin(ids_validos)]
+                    else:
+                        records = pd.DataFrame()
 
-            selected_tipo = st.selectbox("Tipo de lesión", ["Todas"] + tipos, disabled=jugadora_seleccionada is None)
+            # Verificar si hay registros
+            if records.empty:
+                selected_tipo = st.selectbox(
+                "Tipo de lesión",
+                ["NO APLICA"],
+                disabled=True)
+            else:
+                # Mostrar filtro activo si hay registros
+                tipos = sorted(records["tipo_lesion"].dropna().unique())
+                selected_tipo = st.selectbox(
+                    "Tipo de lesión",
+                    ["Todas"] + tipos,
+                    disabled=False
+                )
 
-            if selected_tipo and selected_tipo != "Todas":
-                records = records[records["tipo_lesion"] == selected_tipo]
+                if selected_tipo and selected_tipo != "Todas":
+                    records = records[records["tipo_lesion"] == selected_tipo]
+
+   
+    #st.dataframe(jug_df_filtrado)
+    # Si no hay jugadoras en ese plantel o posición
+    if jug_df_filtrado.empty:
+        #st.warning("⚠️ No hay jugadoras disponibles para este plantel o posición seleccionada.")
+        jugadora_seleccionada = None
+        if modo == 1:
+            return None, posicion
+        else:
+            return None, posicion, pd.DataFrame()  # Devuelve vacío
 
     if modo == 1:
         return jugadora_seleccionada, posicion
     else:
         return jugadora_seleccionada, posicion, records
 
-
 def data_filters_advanced():
     # --- Cargar datos ---
     jug_df, jug_error = load_jugadoras()
 
-    if jug_df is None or "competicion" not in jug_df.columns:
-        st.error("❌ No se pudo cargar la lista de jugadoras o falta la columna 'competicion'.")
+    if jug_df is None or "plantel" not in jug_df.columns:
+        st.error("❌ No se pudo cargar la lista de jugadoras o falta la columna 'plantel'.")
         st.stop()
     
     comp_df, comp_error = load_competiciones()
@@ -140,7 +159,7 @@ def data_filters_advanced():
             "Plantel",
             options=competiciones_options,
             format_func=lambda x: f'{x["nombre"]} ({x["codigo"]})',
-            placeholder="Seleccione una Competición",
+            placeholder="Seleccione un plantel",
             index=3
         )
 
@@ -161,7 +180,7 @@ def data_filters_advanced():
         if competicion:
             codigo_competicion = competicion["codigo"]
             jugadoras_filtradas = jugadoras_filtradas[
-                jugadoras_filtradas["competicion"] == codigo_competicion
+                jugadoras_filtradas["plantel"] == codigo_competicion
             ]
 
         if posicion and posicion != "Todas":
@@ -230,6 +249,36 @@ def data_filters_advanced():
 
 def view_registro_lesion(modo: str = "nuevo", jugadora_seleccionada: str = None, posicion: str = None, lesion_data = None) -> None:
 
+    segmentos_corporales_df = load_catalog_list("segmentos_corporales", as_df=True)
+    map_segmentos_nombre_a_id = dict(zip(segmentos_corporales_df["nombre"], segmentos_corporales_df["id"]))
+    segmentos_corporales_list = segmentos_corporales_df["nombre"].tolist()
+
+    zonas_segmento_df = load_catalog_list("zonas_por_segmento", key="zonas_segmento", as_df=True)
+    map_zonas_segmento_nombre_a_id = dict(zip(zonas_segmento_df["nombre"], zonas_segmento_df["id"]))
+
+    zonas_anatomicas_df = load_catalog_list("zonas_anatomicas", as_df=True)
+    #map_zonas_anatomicas_nombre_a_id = dict(zip(zonas_anatomicas_df["nombre"], zonas_anatomicas_df["id"]))
+
+    #tipos_lesion = load_catalog_list("tipos_lesion") 
+    mecanismos_df = load_catalog_list("mecanismos", as_df=True)
+    mecanismo_list = mecanismos_df["nombre"].tolist()
+
+    tipos_lesion_df = load_catalog_list("tipo_lesion", as_df=True)
+    map_tipo_nombre_a_id = dict(zip(tipos_lesion_df["nombre"], tipos_lesion_df["id"]))
+    #map_tipo_id_a_nombre = dict(zip(tipos_lesion_df["id"], tipos_lesion_df["nombre"]))
+    subtipos_df = load_catalog_list("tipo_especifico_lesion", as_df=True)
+    relacion_df = load_catalog_list("mecanismo_tipo_lesion", as_df=True)
+
+    lateralidades = load_catalog_list("lateralidades")
+    tratamientos = load_catalog_list("tratamientos")
+    tipos_recidiva = load_catalog_list("tipos_recidiva")
+
+    lugares = load_catalog_list("lugares")
+    #mecanismos = load_catalog_list("mecanismos")
+
+    df_gravedad = load_catalog_list("gravedad", as_df=True)
+    gravedad_dias = (df_gravedad.set_index("nombre")[["dias_min", "dias_max"]].apply(tuple, axis=1).to_dict())
+    
     if "form_version" not in st.session_state:
         st.session_state["form_version"] = 0
 
@@ -257,7 +306,7 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_seleccionada: str = None,
         fecha_alta_deportiva = lesion_data.get("fecha_alta_deportiva", None)
         
         disabled_evolution = True
-        st.warning(f"La lesin esta **'Inactiva'**, **fecha de alta médica:** {fecha_alta_medica}, **fecha de alta deportiva:** {fecha_alta_deportiva}. No se pueden editar los datos")
+        st.warning(f"La lesi´n esta **'Inactiva'**, **fecha de alta médica:** {fecha_alta_medica}, **fecha de alta deportiva:** {fecha_alta_deportiva}. No se pueden editar los datos")
 
     lesion_help ="Lesiones agrupadas según el tejido afectado y mecanismo (criterios FIFA/UEFA)."
     
@@ -293,20 +342,15 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_seleccionada: str = None,
 
         tratamientos_default=[p for p in tratamientos_selected if p in tratamientos]
 
-        # try:
-        #     idx_gravedad = list(gravedad_dias.keys()).index(lesion_data["gravedad_clinica"])
-        # except ValueError:
-        #     idx_gravedad = None
-
         es_recidiva_value = lesion_data.get("es_recidiva")
 
         try:
             idx_segmento = None
             if is_valid(lesion_data.get("segmento")):
-                idx_segmento = segmentos_corporales.index(lesion_data["segmento"])
+                idx_segmento = segmentos_corporales_list.index(lesion_data["segmento"])
         except ValueError:
             lugares.append(lesion_data["segmento"])
-            idx_segmento = segmentos_corporales.index(lesion_data["segmento"])
+            idx_segmento = segmentos_corporales_list.index(lesion_data["segmento"])
 
         try:
             idx_lugar = None
@@ -319,15 +363,10 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_seleccionada: str = None,
         try:
             idx_mecanismo = None
             if is_valid(lesion_data.get("mecanismo_lesion")):
-                idx_mecanismo = mecanismos.index(lesion_data["mecanismo_lesion"])
-
-                # Añadir dinámicamente los que no existan
-                for m in lesion_data["mecanismo_lesion"]:
-                    if m not in mecanismos:
-                        mecanismos.append(m)
+                idx_mecanismo = mecanismo_list.index(lesion_data["mecanismo_lesion"])
         except ValueError:
-            mecanismos.append(lesion_data["mecanismo_lesion"])
-            idx_mecanismo = mecanismos.index(lesion_data["mecanismo_lesion"])
+            mecanismo_list.append(lesion_data["mecanismo_lesion"])
+            idx_mecanismo = mecanismo_list.index(lesion_data["mecanismo_lesion"])
 
         try:
             idx_lateralidad = None
@@ -337,13 +376,13 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_seleccionada: str = None,
             lateralidades.append(lesion_data["lateralidad"])
             idx_lateralidad = lateralidades.index(lesion_data["lateralidad"])
 
-        try:
-            idx_tipos_lesion = None
-            if is_valid(lesion_data.get("tipo_lesion")):
-                idx_tipos_lesion = list(tipos_lesion.keys()).index(lesion_data["tipo_lesion"])
-        except ValueError:
-            tipos_lesion.setdefault(lesion_data["tipo_lesion"], [])
-            idx_tipos_lesion = list(tipos_lesion.keys()).index(lesion_data["tipo_lesion"])
+        # try:
+        #     idx_tipos_lesion = None
+        #     if is_valid(lesion_data.get("tipo_lesion")):
+        #         idx_tipos_lesion = tipos_lesion.index(lesion_data["tipo_lesion"])
+        # except ValueError:
+        #     tipos_lesion.append(lesion_data["tipo_lesion"])
+        #     idx_tipos_lesion = tipos_lesion.index(lesion_data["tipo_lesion"])
 
         try:
             idx_tipo_recidiva = None
@@ -376,6 +415,7 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_seleccionada: str = None,
 
     #st.selectbox("Gravedad clínica", ["Leve", "Moderada", "Grave", "Muy grave", "Recidiva"])
     placeholder="Selecciona una opción"
+    default_list=["NO APLICA"]
 
     #with st.form("form_registro_lesion", clear_on_submit=True, border=False):
     col1, col2, col3, col4, col5 = st.columns(5)
@@ -385,63 +425,130 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_seleccionada: str = None,
                                      disabled=disabled_edit, max_value=datetime.date.today(),  
                                      key=f"fecha_lesion_{st.session_state['form_version']}")
         fecha_str = fecha_lesion.strftime("%Y-%m-%d")
-        #st.text(f"segmento:{st.session_state["segmento"]}")  
-        segmento = st.selectbox("Segmento corporal", [*segmentos_corporales], index=idx_segmento, disabled=disabled_edit, accept_new_options=True, placeholder=placeholder, key=f"segmento_{st.session_state['form_version']}")
+
+        segmento = st.selectbox("Región anatómica", segmentos_corporales_list, 
+                                index=idx_segmento, disabled=disabled_edit, placeholder=placeholder, 
+                                key=f"segmento_{st.session_state['form_version']}")
     with col2:
-        lugar = st.selectbox("Lugar", lugares, index=idx_lugar, disabled=disabled_edit, accept_new_options=True, placeholder=placeholder, key=f"lugar_{st.session_state['form_version']}")
-
-        if segmento:
-            zonas_lista = zonas_por_segmento.get(segmento, [])
-
-            idx_zonas = 0 
-            if modo == "editar":
-                try:
-                    idx_zonas = zonas_lista.index(lesion_data["zona_cuerpo"])
-                except ValueError:
-                    idx_zonas = 0
-
-            #st.text(f"id: {idx_zonas}")
-            zona_cuerpo = st.selectbox("Zona del cuerpo", [*zonas_por_segmento[segmento]], index=idx_zonas, disabled=disabled_edit, accept_new_options=True, placeholder=placeholder, key=f"zona_cuerpo_{st.session_state['form_version']}")
-        else:
-            zona_cuerpo = st.selectbox("Zona del cuerpo", ["NO APLICA"], disabled=True)
-    with col3:
-        mecanismo_lesion = st.selectbox("Mecanismo de lesión", mecanismos, index=idx_mecanismo, disabled=disabled_edit, accept_new_options=True, placeholder=placeholder, key=f"mecanismo_lesion_{st.session_state['form_version']}")
+        lugar = st.selectbox("Lugar", lugares, index=idx_lugar, disabled=disabled_edit, placeholder=placeholder, 
+                             key=f"lugar_{st.session_state['form_version']}")
         
-        subregiones = zonas_anatomicas.get(zona_cuerpo, [])
-        if subregiones:
-                idx_zona_espec = 0 
-                if modo == "editar":
-                    try:
-                        idx_zona_espec = subregiones.index(lesion_data["zona_especifica"])
-                    except ValueError:
-                        idx_zona_espec = 0
-                    
-                zona_especifica = st.selectbox("Región anatómica específica:", subregiones, index=idx_zona_espec, key=f"subregion_{st.session_state['form_version']}", disabled=disabled_edit, placeholder=placeholder)
+        idx_zonas = 0
+        if segmento:
+            segmento_id = map_segmentos_nombre_a_id.get(segmento)
+            zonas_segmento_filtrados = zonas_segmento_df[zonas_segmento_df["segmento_id"] == segmento_id]
+            zonas_segmento_list = zonas_segmento_filtrados["nombre"].tolist()
         else:
-            zona_especifica = st.selectbox("Región anatómica específica:", ["NO APLICA"], key=f"subregion_{st.session_state['form_version']}", disabled=True)
+            zonas_segmento_list = []
+
+        # Si hay subtipos, usarlos; si no, usar el valor por defecto
+        opciones_tipo_zona = zonas_segmento_list if zonas_segmento_list else default_list
+        is_disabled = disabled_edit or not zonas_segmento_list
+    
+        if modo == "editar":
+            try:
+                idx_zonas = zonas_segmento_list.index(lesion_data["zona_cuerpo"])
+            except ValueError:
+                idx_zonas = 0
+
+        zona_cuerpo = st.selectbox("Zona anatómica", opciones_tipo_zona, index=idx_zonas, disabled=is_disabled, 
+                                   placeholder=placeholder, key=f"zona_cuerpo_{st.session_state['form_version']}")
+    with col3:
+        mecanismo_lesion = st.selectbox("Mecanismo de lesión", mecanismo_list, index=idx_mecanismo, disabled=disabled_edit, 
+                                        placeholder=placeholder, key=f"mecanismo_lesion_{st.session_state['form_version']}")
+        
+        idx_zona_espec = 0
+        if zona_cuerpo:
+            zonas_segmento_id = map_zonas_segmento_nombre_a_id.get(zona_cuerpo)
+            zonas_anatomicas_filtrados = zonas_anatomicas_df[zonas_anatomicas_df["zona_id"] == zonas_segmento_id]
+            zonas_anatomicas_list = zonas_anatomicas_filtrados["nombre"].tolist()
+        else:
+            zonas_anatomicas_list = []
+
+        # Si hay subtipos, usarlos; si no, usar el valor por defecto
+        opciones_tipo_zona_especifica = zonas_anatomicas_list if zonas_anatomicas_list else default_list
+        is_disabled = disabled_edit or not zonas_anatomicas_list
+    
+        if modo == "editar":
+            try:
+                idx_zona_espec = zonas_anatomicas_list.index(lesion_data["zona_especifica"])
+            except ValueError:
+                idx_zona_espec = 0
+                
+        zona_especifica = st.selectbox("Estructura anatómica", opciones_tipo_zona_especifica, index=idx_zona_espec, 
+                                       key=f"subregion_{st.session_state['form_version']}", disabled=is_disabled,
+                                       placeholder=placeholder)
+
     with col4:
-        tipo_lesion = st.selectbox("Tipo de lesión", list(tipos_lesion.keys()), index=idx_tipos_lesion, disabled=disabled_edit, accept_new_options=True, help=lesion_help, placeholder=placeholder, key=f"tipo_lesion_{st.session_state['form_version']}")
+        
+        idx_tipos_lesion = 0
+        if mecanismo_lesion:
+            # Filtrar tipos compatibles
+            mecanismo_id = mecanismos_df.loc[mecanismos_df["nombre"] == mecanismo_lesion, "id"].iloc[0]
+            
+            tipos_filtrados = tipos_lesion_df.merge(
+                relacion_df[relacion_df["mecanismo_id"] == mecanismo_id],
+                left_on="id",
+                right_on="tipo_lesion_id",
+                how="inner"
+            )
+
+            tipos_lesion_list = tipos_filtrados["nombre"].tolist()
+        else:
+            tipos_lesion_list = []
+
+        # Si hay subtipos, usarlos; si no, usar el valor por defecto
+        opciones_tipo_lesion = tipos_lesion_list if tipos_lesion_list else default_list
+        is_disabled = disabled_edit or not tipos_lesion_list
+    
+        if modo == "editar":
+            try:
+                idx_tipos_lesion = tipos_lesion_list.index(lesion_data.get("tipo_lesion", ""))
+            except ValueError:
+                idx_tipos_lesion = 0
+
+        tipo_lesion = st.selectbox("Tipo de lesión", opciones_tipo_lesion, index=idx_tipos_lesion, 
+                                   disabled=is_disabled, help=lesion_help, placeholder=placeholder, 
+                                   key=f"tipo_lesion_{st.session_state['form_version']}")
+        
         lateralidad = st.selectbox("Lateralidad", lateralidades, index=idx_lateralidad, disabled=disabled_edit, placeholder=placeholder, key=f"lateralidad_{st.session_state['form_version']}")
     with col5:
-        
-        subtipos = tipos_lesion.get(tipo_lesion, [])
+        idx_tipo_especifico = 0
 
-        if subtipos:
-            if modo == "editar":
+        if debe_deshabilitar_subtipo(mecanismo_lesion, tipo_lesion):
+            opciones_tipo = default_list
+            is_disabled = True
+        else: 
+            # Obtener lista de subtipos válidos según la selección
+            if tipo_lesion:
+                tipo_lesion_id = map_tipo_nombre_a_id.get(tipo_lesion)
+                subtipos_filtrados = subtipos_df[subtipos_df["tipo_lesion_id"] == tipo_lesion_id]
+                subtipos_list = subtipos_filtrados["nombre"].tolist()
+            else:
+                subtipos_list = []
+
+            # Si hay subtipos, usarlos; si no, usar el valor por defecto
+            opciones_tipo = subtipos_list if subtipos_list else default_list
+            is_disabled = disabled_edit or not subtipos_list
+        
+            # Establecer índice en modo edición
+            if modo == "editar" and subtipos_list:
                 try:
-                    idx_tipo_especifico = subtipos.index(lesion_data["tipo_especifico"])
+                    idx_tipo_especifico = subtipos_list.index(lesion_data.get("tipo_especifico", ""))
                 except ValueError:
                     idx_tipo_especifico = 0
-            tipo_especifico = st.selectbox("Tipo específico", subtipos, index=idx_tipo_especifico, disabled=disabled_edit, help=lesion_help, placeholder=placeholder, key=f"tipo_especifico_{st.session_state['form_version']}")
-        else:
-            tipo_especifico = st.selectbox("Tipo específico", ["NO APLICA"], disabled=True, help=lesion_help)
-        
+
+        tipo_especifico = st.selectbox("Tipo específico", opciones_tipo, index=idx_tipo_especifico, disabled=is_disabled, help=lesion_help, placeholder=placeholder, key=f"tipo_especifico_{st.session_state['form_version']}")
+
+        ############################################
+
     diagnostico = st.text_area("Diagnóstico Médico", disabled=disabled_edit, value=diagnostico_text, key=f"diagnostico_{st.session_state['form_version']}")
 
     col1, col2, col3 = st.columns([1,2,2])    
 
     with col1:
-        es_recidiva = st.checkbox("Es Recidiva", value=es_recidiva_value, disabled=disabled_edit)
+        es_recidiva = st.checkbox("Es Recidiva", value=es_recidiva_value, disabled=disabled_edit, 
+                                  key=f"es_recidiva_{st.session_state['form_version']}")
     with col2:
         tipo_recidiva = st.selectbox(
                 "Tipo de recidiva (según tiempo desde el alta anterior)",
@@ -495,12 +602,16 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_seleccionada: str = None,
     #------------------------------      
     col1, col2 = st.columns([2,1])   
     with col1:
-        tipo_tratamiento = st.multiselect("Tipo(s) de tratamiento", options=tratamientos, default=tratamientos_default, placeholder="Selecciona uno o más", max_selections=5, disabled=disabled_edit, accept_new_options=True, key=f"tipo_tratamiento_{st.session_state['form_version']}")
+        tipo_tratamiento = st.multiselect("Tipo(s) de tratamiento", options=tratamientos, default=tratamientos_default, 
+                                          placeholder="Selecciona uno o más", max_selections=5, disabled=disabled_edit, 
+                                          key=f"tipo_tratamiento_{st.session_state['form_version']}")
     
     with col2:
-        personal_reporta = st.text_input("Personal médico que reporta", value=personal_reporte_text, disabled=disabled_edit, key=f"personal_reporta_{st.session_state['form_version']}")
+        personal_reporta = st.text_input("Personal médico que reporta", value=personal_reporte_text, disabled=disabled_edit, 
+                                         key=f"personal_reporta_{st.session_state['form_version']}")
 
-    descripcion = st.text_area("Observaciones / Descripción de la lesión", value=descripcion_text, disabled=disabled_edit, key=f"descripcion_{st.session_state['form_version']}")
+    descripcion = st.text_area("Observaciones / Descripción de la lesión", value=descripcion_text, disabled=disabled_edit, 
+                               key=f"descripcion_{st.session_state['form_version']}")
     
     ############## FIN LOGICA ##############
 
@@ -582,14 +693,15 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_seleccionada: str = None,
             "tratamiento_aplicado": tratamiento_aplicado_str,
             "personal_seguimiento": personal_seguimiento,
             "observaciones": descripcion,
-            "fecha_hora_registro": datetime.datetime.now().isoformat()
+            "fecha_hora_registro": datetime.datetime.now().isoformat(),
+            "usuario": st.session_state['auth']['username']
         }
 
     ############# PROCESAMIENTO Y GUARDADO #############  
     tratamientos_str = ([t.upper() for t in tipo_tratamiento] if isinstance(tipo_tratamiento, list) else [])
 
-    #if not lugar or not segmento or not zona_cuerpo or not tipo_lesion or not gravedad_clinica or not mecanismo_lesion:
-    #    error = True
+    if not lugar or not segmento or not zona_cuerpo or not tipo_lesion or not mecanismo_lesion:
+        error = True
 
     # Construimos el diccionario de la lesión
     if modo == "nuevo":
@@ -622,7 +734,8 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_seleccionada: str = None,
             "diagnostico": diagnostico,
             "descripcion": descripcion,
             "evolucion": [],
-            "fecha_hora_registro": datetime.datetime.now().isoformat()
+            "fecha_hora_registro": datetime.datetime.now().isoformat(),
+            "usuario": st.session_state['auth']['username']
         }
     else:  # modo editar
         if "evolucion" not in lesion_data or not isinstance(lesion_data["evolucion"], list):
@@ -793,7 +906,7 @@ def player_block_dux(jugadora_seleccionada: dict, unavailable="N/A"):
     pais = jugadora_seleccionada.get("pais", unavailable)
     fecha_nac = jugadora_seleccionada.get("fecha_nacimiento", unavailable)
     sexo = jugadora_seleccionada.get("sexo", "")
-    competicion = jugadora_seleccionada.get("competicion", "")
+    competicion = jugadora_seleccionada.get("plantel", "")
     url_drive = jugadora_seleccionada.get("url", "")
 
     # Calcular edad
