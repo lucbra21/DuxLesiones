@@ -16,6 +16,9 @@ if not st.session_state["auth"]["is_logged_in"]:
     login_view()
     st.stop()
 
+if st.session_state["auth"]["rol"] != "admin":
+    st.switch_page("app.py")
+    
 st.header("Administrador de :red[Registros]", divider=True)
 
 menu()
@@ -28,10 +31,10 @@ if records.empty:
     st.warning("No hay datos de lesiones disponibles.")
     st.stop()   
 
-df_filtrado = clean_df(records)
+#df_filtrado = clean_df(records)
 
 disabled = records.columns.tolist()
-df_edited = st.data_editor(df_filtrado, num_rows="dynamic", disabled=disabled)
+df_edited = st.data_editor(records, num_rows="dynamic", disabled=disabled)
 
 #save_if_modified(df_filtrado, df_edited)
 csv_data = df_edited.to_csv(index=False).encode("utf-8")

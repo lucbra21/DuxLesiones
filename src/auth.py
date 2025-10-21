@@ -3,7 +3,7 @@ import streamlit as st
 import jwt
 import time
 from st_cookies_manager import EncryptedCookieManager
-from src.io_files import _load_users
+from src.io_files import load_users
 
 # # --- CONFIG JWT ---
 JWT_SECRET = st.secrets.auth.jwt_secret
@@ -45,7 +45,7 @@ def ensure_session_defaults() -> None:
 def login_view() -> None:
     """Render the login form and handle authentication."""
     
-    users = _load_users()
+    users = load_users()
 
     #expected_user, expected_pass, rol = _get_credentials()
     
@@ -160,10 +160,10 @@ def menu():
         if st.session_state["auth"]["rol"] == "admin" or st.session_state["auth"]["rol"] == "developer":
             st.subheader("Administración :material/settings:")
             st.page_link("pages/files.py", label="Registros", icon=":material/docs:")
-            #st.page_link("pages/admin.py", label="Simulador", icon=":material/app_registration:")
         
         if st.session_state["auth"]["rol"] == "developer":
             st.page_link("pages/ficha_medica.py", label="Ficha Médica", icon=":material/lab_profile:")
+            st.page_link("pages/admin.py", label="Developer Area", icon=":material/code_blocks:")
 
         btnSalir = st.button("Cerrar Sesión", type="tertiary", icon=":material/logout:")
 

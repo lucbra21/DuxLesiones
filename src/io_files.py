@@ -21,43 +21,96 @@ USERS_FILE = os.path.join(DATA_DIR, "users.jsonl")
 # Ruta base común para todos los catálogos
 CATALOG_DIR = Path("data/catalogos")
 
-def save_if_modified(df_original, df_edited):
+def save_if_modified(df_original: pd.DataFrame, df_edited: pd.DataFrame, file="registros"):
     """
-    Guarda automáticamente los cambios en REGISTROS_JSONL si el DataFrame editado
-    difiere del original (por ejemplo, filas eliminadas o agregadas).
+    Guarda automáticamente los cambios en un archivo JSONL (una línea por registro)
+    si el DataFrame editado difiere del original.
+
+    Ideal para estructuras tipo registros (lesiones, wellness, RPE),
+    ya que cada línea puede importarse fácilmente a SQL como una fila.
 
     Args:
         df_original (pd.DataFrame): DataFrame original antes de la edición.
         df_edited (pd.DataFrame): DataFrame resultante del st.data_editor.
+        file (str): 'registros' o 'users' para determinar la ruta destino.
     """
+
+    # Determinar ruta de guardado
+    if file == "registros":
+        path = Path(REGISTROS_JSONL)
+    else:
+        path = Path(USERS_FILE)
+
+    # Verificar si hubo cambios
     if df_edited.equals(df_original):
         return False
 
     try:
-        path = Path(REGISTROS_JSONL)
-
+        # Guardar en formato JSONL (una línea por registro)
         with open(path, "w", encoding="utf-8") as f:
             for _, row in df_edited.iterrows():
+                # Convertir cada fila a dict y volcarla como JSON en una línea
                 json.dump(row.to_dict(), f, ensure_ascii=False)
                 f.write("\n")
 
-        st.success("Cambios detectados y guardados automáticamente en registros.jsonl")
+        st.success(f"✅ Cambios detectados y guardados automáticamente en {path.name} (formato JSONL)")
         return True
+
     except Exception as e:
-        st.error(f"Error al guardar los cambios: {e}")
+        st.error(f"❌ Error al guardar los cambios en {path.name}: {e}")
         return False
-        
-def _load_users() -> list[dict]:
-    """Carga lista de usuarios desde data/users.json."""
+      
+def load_users():
+    """Carga usuarios desde USERS_FILE en formato JSON estándar (lista) o JSONL (una línea por objeto).
+    Devuelve siempre una lista de diccionarios.
+    """
     try:
         with open(USERS_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
+            text = f.read().strip()
+
+        if not text:
+            return []
+
+        first_char = text.lstrip()[:1]
+
+        # --- Caso 1: JSON estándar (lista de objetos) ---
+        if first_char == "[":
+            data = json.loads(text)
+            if not isinstance(data, list):
+                st.error("El archivo de usuarios no contiene una lista JSON válida.")
+                return []
+            return [u for u in data if isinstance(u, dict)]
+
+        # --- Caso 2: JSONL (una línea por usuario) ---
+        elif first_char == "{":
+            users = []
+            for i, line in enumerate(text.splitlines(), start=1):
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    obj = json.loads(line)
+                    if isinstance(obj, dict):
+                        users.append(obj)
+                except json.JSONDecodeError as e:
+                    st.error(f"Error de JSON en la línea {i} de '{USERS_FILE}': {e}")
+                    return []
+            return users
+
+        else:
+            st.error("Formato de archivo de usuarios no reconocido (ni lista JSON ni JSONL).")
+            return []
+
     except FileNotFoundError:
         st.error("Archivo de usuarios no encontrado.")
         return []
-    except json.JSONDecodeError:
-        st.error("Error al leer el archivo de usuarios.")
+    except json.JSONDecodeError as e:
+        st.error(f"Error al leer el archivo de usuarios: {e}")
         return []
+    except Exception as e:
+        st.error(f"Error inesperado al cargar usuarios: {e}")
+        return []
+
 
 def _ensure_data_dir():
     """
