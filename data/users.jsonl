@@ -15,6 +15,11 @@
     "rol": "fisio"
   },
   {
+    "username": "diego",
+    "password": "fisio2025.",
+    "rol": "fisio"
+  },
+  {
     "username": "coach",
     "password": "coachfit",
     "rol": "coach"
