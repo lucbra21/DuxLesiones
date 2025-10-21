@@ -157,7 +157,7 @@ def menu():
 
         st.page_link("pages/epidemiologia.py", label="Grupal", icon=":material/groups:")
 
-        if st.session_state["auth"]["rol"] == "admin":
+        if st.session_state["auth"]["rol"] == "admin" or st.session_state["auth"]["rol"] == "developer":
             st.subheader("Administración :material/settings:")
             st.page_link("pages/files.py", label="Registros", icon=":material/docs:")
             #st.page_link("pages/admin.py", label="Simulador", icon=":material/app_registration:")

@@ -1,5 +1,5 @@
 {
-  "lugares_lesion": [
+  "lugares": [
     { "id": 1, "nombre": "ENTRENAMIENTO" },
     { "id": 2, "nombre": "PARTIDO" },
     { "id": 3, "nombre": "GIMNASIO" },

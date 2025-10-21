@@ -1,7 +1,6 @@
 {
   "tipos_recidiva": [
-    { "id": 1, "nombre": "TEMPRANA" },
-    { "id": 2, "nombre": "TARDÍA" },
-    { "id": 3, "nombre": "REMOTA" }
+    { "id": 1, "nombre": "TEMPRANA (≤ 2 MESES)" },
+    { "id": 2, "nombre": "TARDÍA (2-12 MESES)" }
   ]
 }

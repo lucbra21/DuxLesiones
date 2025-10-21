@@ -7,6 +7,7 @@ from pathlib import Path
 from io import BytesIO
 from typing import Optional
 import streamlit as st
+from pathlib import Path
 
 # Paths
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
@@ -17,8 +18,35 @@ REGISTROS_JSONL = os.path.join(DATA_DIR, "registros.jsonl")
 COMPETICIONES_JSONL = os.path.join(DATA_DIR, "competiciones.jsonl")
 USERS_FILE = os.path.join(DATA_DIR, "users.jsonl")
 
-#st.text(f"BASE_DIR: {DATA_DIR}")
+# Ruta base común para todos los catálogos
+CATALOG_DIR = Path("data/catalogos")
 
+def save_if_modified(df_original, df_edited):
+    """
+    Guarda automáticamente los cambios en REGISTROS_JSONL si el DataFrame editado
+    difiere del original (por ejemplo, filas eliminadas o agregadas).
+
+    Args:
+        df_original (pd.DataFrame): DataFrame original antes de la edición.
+        df_edited (pd.DataFrame): DataFrame resultante del st.data_editor.
+    """
+    if df_edited.equals(df_original):
+        return False
+
+    try:
+        path = Path(REGISTROS_JSONL)
+
+        with open(path, "w", encoding="utf-8") as f:
+            for _, row in df_edited.iterrows():
+                json.dump(row.to_dict(), f, ensure_ascii=False)
+                f.write("\n")
+
+        st.success("Cambios detectados y guardados automáticamente en registros.jsonl")
+        return True
+    except Exception as e:
+        st.error(f"Error al guardar los cambios: {e}")
+        return False
+        
 def _load_users() -> list[dict]:
     """Carga lista de usuarios desde data/users.json."""
     try:
@@ -42,6 +70,52 @@ def _ensure_data_dir():
     It does not raise an error if the directory already exists.
     """
     os.makedirs("data", exist_ok=True)
+
+def load_catalog_list(name: str, key: str | None = None, field: str = "nombre", as_df: bool = False):
+    """
+    Carga un catálogo JSON desde la carpeta base.
+
+    Parámetros:
+    ----------
+    name : str
+        Nombre del archivo sin extensión (.json).
+        Ej: "segmentos_corporales" -> lee data/catalogos/segmentos_corporales.json
+    key : str | None
+        Clave raíz del JSON (por defecto igual al nombre del archivo).
+        Ej: "zonas_anatomicas", "tratamientos", etc.
+    field : str
+        Campo que se extrae para la lista (por defecto 'nombre').
+    as_df : bool
+        Si True, devuelve un DataFrame en lugar de una lista.
+
+    Retorna:
+    --------
+    list[str] o pandas.DataFrame
+    """
+
+    # Ruta completa al archivo
+    path = CATALOG_DIR / f"{name}.json"
+
+    if not path.exists():
+        raise FileNotFoundError(f"No se encontró el catálogo: {path}")
+
+    # Cargar datos
+    with open(path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    # Determinar estructura: con o sin clave raíz
+    key = key or name
+    items = data.get(key, data) if isinstance(data, dict) else data
+
+    if not isinstance(items, list):
+        raise ValueError(f"Estructura inesperada en {name}.json")
+
+    # Devuelve DataFrame o lista simple
+    if as_df:
+        return pd.DataFrame(items)
+    else:
+        return [item[field] for item in items if field in item]
+ 
 
 def load_competiciones() -> tuple[pd.DataFrame | None, str | None]:
     """
@@ -206,6 +280,7 @@ def get_records_plus_players_df() -> pd.DataFrame:
     # --- Leer registros y jugadoras ---
     recs = _read_all_records()
     jug_df, jug_error = load_jugadoras()
+    jug_colum = jug_df.columns.tolist()
 
     # --- Validar registros ---
     if not recs:
@@ -234,6 +309,13 @@ def get_records_plus_players_df() -> pd.DataFrame:
             )
         )
 
+        # Crear mapa {identificacion: plantel} si existe
+        if "plantel" in jug_df.columns:
+            map_plantel = dict(zip(jug_df["identificacion"], jug_df["plantel"]))
+            df["plantel"] = df["id_jugadora"].map(map_plantel).fillna("")
+        else:
+            df["plantel"] = ""
+
         # Mapear nombres al df de registros
         df["nombre_jugadora"] = df["id_jugadora"].map(map_nombres).fillna("")
 
@@ -242,10 +324,23 @@ def get_records_plus_players_df() -> pd.DataFrame:
         if "id_jugadora" in cols and "nombre_jugadora" in cols:
             idx = cols.index("id_jugadora") + 1
             cols.insert(idx, cols.pop(cols.index("nombre_jugadora")))
-            df = df[cols]
+
+        # Mover plantel justo después de posicion (si existe)
+        if "plantel" in cols and "posicion" in cols:
+            idx = cols.index("posicion") + 1
+            cols.insert(idx, cols.pop(cols.index("plantel")))
+        
+        df = df[cols]
     else:
         df["nombre_jugadora"] = ""
+        df["plantel"] = ""
 
+    # --- Eliminar columnas duplicadas pero conservar 'posicion' y 'plantel' ---
+    columnas_a_eliminar = [
+        col for col in jug_colum if col in df.columns and col not in ["posicion", "plantel"]
+    ]
+
+    df = df.drop(columns=columnas_a_eliminar)
     return df
 
 

@@ -2,6 +2,8 @@ import requests
 import plotly.express as px
 import pandas as pd
 
+from src.schema import reglas_desactivar_subtipo
+
 def get_photo(url):
     try:
         response = requests.get(url)
@@ -15,7 +17,7 @@ def clean_df(records):
     columnas_excluir = [
     "id_jugadora",
     "fecha_hora",
-    "posicion",
+    #"posicion",
     "tipo_tratamiento",
     "diagnostico",
     "descripcion",
@@ -30,11 +32,12 @@ def clean_df(records):
     "periodo",
     "es_recidiva",
     "tipo_recidiva"
+    #"usuario"
     ]
     # --- eliminar columnas si existen ---
     df_filtrado = records.drop(columns=[col for col in columnas_excluir if col in records.columns])
 
-    orden = ["fecha_lesion", "nombre_jugadora", "id_lesion", "lugar", "segmento", "zona_cuerpo", "zona_especifica", "lateralidad", "tipo_lesion", "tipo_especifico", "gravedad", "personal_reporta", "estado_lesion"]
+    orden = ["fecha_lesion", "nombre_jugadora", "posicion", "plantel" ,"id_lesion", "lugar", "segmento", "zona_cuerpo", "zona_especifica", "lateralidad", "tipo_lesion", "tipo_especifico", "gravedad", "personal_reporta", "estado_lesion"]
     
     # Solo mantener columnas que realmente existen
     orden_existentes = [c for c in orden if c in df_filtrado.columns]
@@ -209,3 +212,13 @@ def grafico_recidivas(df: pd.DataFrame):
     )
     fig.update_layout(template="simple_white", height=350)
     return fig
+
+def debe_deshabilitar_subtipo(mecanismo: str, tipo: str) -> bool:
+    """
+    Determina si debe deshabilitarse el selector de tipo específico 
+    según las reglas clínicas establecidas.
+    """
+    return any(
+        r["mecanismo"] == mecanismo and r["tipo"] == tipo
+        for r in reglas_desactivar_subtipo
+    )
