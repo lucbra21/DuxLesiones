@@ -1,0 +1,15 @@
+{
+  "mecanismo_tipo_lesion": [
+    { "mecanismo_id": 1, "tipo_lesion_id": 1, "descripcion": "SIN CONTACTO → MUSCULAR" },
+    { "mecanismo_id": 1, "tipo_lesion_id": 3, "descripcion": "SIN CONTACTO → LIGAMENTARIA" },
+    { "mecanismo_id": 2, "tipo_lesion_id": 5, "descripcion": "CON CONTACTO → TRAUMÁTICA" },
+    { "mecanismo_id": 2, "tipo_lesion_id": 4, "descripcion": "CON CONTACTO → ÓSEA" },
+    { "mecanismo_id": 3, "tipo_lesion_id": 1, "descripcion": "SOBRECARGA → MUSCULAR" },
+    { "mecanismo_id": 3, "tipo_lesion_id": 2, "descripcion": "SOBRECARGA → TENDINOSA" },
+    { "mecanismo_id": 4, "tipo_lesion_id": 2, "descripcion": "MICROTRAUMA REPETITIVO → TENDINOSA" },
+    { "mecanismo_id": 4, "tipo_lesion_id": 4, "descripcion": "MICROTRAUMA REPETITIVO → ÓSEA (fractura stress)" },
+    { "mecanismo_id": 5, "tipo_lesion_id": 3, "descripcion": "TORSIÓN → LIGAMENTARIA" },
+    { "mecanismo_id": 6, "tipo_lesion_id": 4, "descripcion": "GOLPE DIRECTO → ÓSEA" },
+    { "mecanismo_id": 6, "tipo_lesion_id": 5, "descripcion": "GOLPE DIRECTO → TRAUMÁTICA / SUPERFICIAL" }
+  ]
+}

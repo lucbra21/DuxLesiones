@@ -1,0 +1,10 @@
+{
+  "tipo_lesion": [
+    { "id": 1, "nombre": "MUSCULAR" },
+    { "id": 2, "nombre": "TENDINOSA" },
+    { "id": 3, "nombre": "LIGAMENTARIA / ARTICULAR" },
+    { "id": 4, "nombre": "ÓSEA" },
+    { "id": 5, "nombre": "TRAUMÁTICA / SUPERFICIAL" },
+    { "id": 6, "nombre": "OTRAS" }
+  ]
+}
