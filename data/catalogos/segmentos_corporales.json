@@ -1,7 +1,24 @@
 {
   "segmentos_corporales": [
-    { "id": 1, "nombre": "TREN SUPERIOR", "descripcion": "Extremidades y parte superior del cuerpo" },
-    { "id": 2, "nombre": "TRONCO / MEDIO", "descripcion": "Zona central del cuerpo" },
-    { "id": 3, "nombre": "TREN INFERIOR", "descripcion": "Extremidades inferiores" }
+    {
+      "id": 1,
+      "nombre": "CABEZA Y CUELLO",
+      "descripcion": "Región craneal, facial y cervical del cuerpo"
+    },
+    {
+      "id": 2,
+      "nombre": "TRONCO",
+      "descripcion": "Zona central del cuerpo que incluye tórax, abdomen y espalda"
+    },
+    {
+      "id": 3,
+      "nombre": "MMSS",
+      "descripcion": "Miembros Superiores: hombros, brazos, codos, antebrazos, muñecas y manos"
+    },
+    {
+      "id": 4,
+      "nombre": "MMII",
+      "descripcion": "Miembros Inferiores: caderas, muslos, rodillas, piernas, tobillos y pies"
+    }
   ]
 }
