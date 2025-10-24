@@ -1,20 +1,26 @@
 {
   "zonas_segmento": [
-    { "id": 1, "nombre": "HOMBRO", "segmento_id": 1 },
-    { "id": 2, "nombre": "BRAZO", "segmento_id": 1 },
-    { "id": 3, "nombre": "CODO", "segmento_id": 1 },
-    { "id": 4, "nombre": "ANTEBRAZO", "segmento_id": 1 },
-    { "id": 5, "nombre": "MUÑECA", "segmento_id": 1 },
-    { "id": 6, "nombre": "MANO", "segmento_id": 1 },
-    { "id": 7, "nombre": "CABEZA", "segmento_id": 1 },
-    { "id": 8, "nombre": "CUELLO", "segmento_id": 1 },
-    { "id": 9, "nombre": "CADERA", "segmento_id": 2 },
-    { "id": 10, "nombre": "PELVIS", "segmento_id": 2 },
-    { "id": 11, "nombre": "COLUMNA LUMBAR", "segmento_id": 2 },
-    { "id": 12, "nombre": "MUSLO", "segmento_id": 3 },
-    { "id": 13, "nombre": "PIERNA", "segmento_id": 3 },
-    { "id": 14, "nombre": "RODILLA", "segmento_id": 3 },
-    { "id": 15, "nombre": "TOBILLO", "segmento_id": 3 },
-    { "id": 16, "nombre": "PIE", "segmento_id": 3 }
+    { "id": 1, "nombre": "CARA", "segmento_id": 1 },
+    { "id": 2, "nombre": "CRÁNEO", "segmento_id": 1 },
+    { "id": 3, "nombre": "COLUMNA CERVICAL", "segmento_id": 1 },
+
+    { "id": 4, "nombre": "COLUMNA DORSAL", "segmento_id": 2 },
+    { "id": 5, "nombre": "TÓRAX", "segmento_id": 2 },
+    { "id": 6, "nombre": "COLUMNA LUMBAR", "segmento_id": 2 },
+    { "id": 7, "nombre": "PÉLVIS", "segmento_id": 2 },
+
+    { "id": 8, "nombre": "CINTURA ESCAPULAR Y HOMBRO", "segmento_id": 3 },
+    { "id": 9, "nombre": "BRAZO", "segmento_id": 3 },
+    { "id": 10, "nombre": "CODO", "segmento_id": 3 },
+    { "id": 11, "nombre": "ANTEBRAZO", "segmento_id": 3 },
+    { "id": 12, "nombre": "MUÑECA", "segmento_id": 3 },
+    { "id": 13, "nombre": "MANO", "segmento_id": 3 },
+
+    { "id": 14, "nombre": "CADERA", "segmento_id": 4 },
+    { "id": 15, "nombre": "MUSLO", "segmento_id": 4 },
+    { "id": 16, "nombre": "RODILLA", "segmento_id": 4 },
+    { "id": 17, "nombre": "PIERNA", "segmento_id": 4 },
+    { "id": 18, "nombre": "TOBILLO", "segmento_id": 4 },
+    { "id": 19, "nombre": "PIE", "segmento_id": 4 }
   ]
 }

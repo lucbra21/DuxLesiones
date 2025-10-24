@@ -98,7 +98,7 @@ def login_view() -> None:
             else:
                 st.error("Usuario o contraseña incorrectos")
 
-        st.caption("Usa usuario/contraseña proporcionados o variables de entorno TRAINER_USER/TRAINER_PASS")
+        #st.caption("Usa usuario/contraseña proporcionados o variables de entorno TRAINER_USER/TRAINER_PASS")
 
 def create_jwt_token(username: str, rol: str) -> str:
     """Crea un token JWT firmado con expiración."""
