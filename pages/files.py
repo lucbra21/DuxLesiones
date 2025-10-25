@@ -24,19 +24,13 @@ st.header("Administrador de :red[Registros]", divider=True)
 menu()
 
 #df = get_records_plus_players_df()
-
 jugadora_seleccionada, posicion, records = data_filters(modo=3)
-
-if records.empty:    
-    st.warning("No hay datos de lesiones disponibles.")
-    st.stop()   
-
 #df_filtrado = clean_df(records)
 
 disabled = records.columns.tolist()
 df_edited = st.data_editor(records, num_rows="dynamic", disabled=disabled)
 
-#save_if_modified(df_filtrado, df_edited)
+save_if_modified(records, df_edited)
 csv_data = df_edited.to_csv(index=False).encode("utf-8")
 
 st.download_button(
