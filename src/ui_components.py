@@ -900,7 +900,7 @@ def player_block_dux(jugadora_seleccionada: dict, unavailable="N/A"):
     # Extraer información básica
     nombre = jugadora_seleccionada.get("nombre", unavailable).strip().upper()
     apellido = jugadora_seleccionada.get("apellido", "").strip().upper()
-    nombre_completo = f"{nombre} {apellido}"
+    nombre_completo = f"{nombre.capitalize()} {apellido.capitalize()}"
     id_jugadora = jugadora_seleccionada.get("identificacion", unavailable)
     posicion = jugadora_seleccionada.get("posicion", unavailable)
     pais = jugadora_seleccionada.get("pais", unavailable)
@@ -932,7 +932,7 @@ def player_block_dux(jugadora_seleccionada: dict, unavailable="N/A"):
         profile_image = "profile"
 
     # Bloque visual
-    st.markdown(f"### {nombre_completo.capitalize()} {genero_icono}")
+    st.markdown(f"### {nombre_completo.title()} {genero_icono}")
     #st.markdown(f"##### **_:red[Identificación:]_** _{id_jugadora}_ | **_:red[País:]_** _{pais.upper()}_")
 
     col1, col2, col3 = st.columns([1.6, 2, 2])
@@ -944,9 +944,9 @@ def player_block_dux(jugadora_seleccionada: dict, unavailable="N/A"):
             if response and response.status_code == 200 and 'image' in response.headers.get("Content-Type", ""):
                 st.image(response.content, width=300)
             else:
-                st.image(f"assets/images/{profile_image}.png", width=180)
+                st.image(f"assets/images/{profile_image}.png", width=300)
         else:
-            st.image(f"assets/images/{profile_image}.png", width=180)
+            st.image(f"assets/images/{profile_image}.png", width=300)
 
     with col2:
         #st.markdown(f"**:material/sports_soccer: Competición:** {competicion}")
@@ -966,3 +966,147 @@ def player_block_dux(jugadora_seleccionada: dict, unavailable="N/A"):
           
     st.divider()
 
+def main_metrics(records, modo="overview"):
+    """
+    Muestra métricas principales de lesiones según el modo:
+    - 'overview': agrupa por periodo (semana/mes), muestra filtros y help en métricas.
+    - 'reporte': usa todo el DataFrame sin agrupar ni filtros.
+    """
+
+    # --- Validación inicial ---
+    if records.empty:    
+        st.warning("No hay datos de lesiones disponibles.")
+        st.stop()  
+
+    # Convertir fecha y limpiar
+    records["fecha_alta_diagnostico"] = pd.to_datetime(records["fecha_alta_diagnostico"], errors="coerce")
+
+    ultimos = records.copy()
+    articulo, periodo = "", ""
+
+    # --- MODO OVERVIEW ---
+    if modo == "overview":
+        periodo = st.radio("Agrupar por:", ["Semana", "Mes"], horizontal=True)
+        articulo = "la última" if periodo == "Semana" else "el último"
+
+        if periodo == "Semana":
+            records["periodo"] = records["fecha_alta_diagnostico"].dt.isocalendar().week
+            ultimos = records[
+                records["fecha_alta_diagnostico"]
+                >= (records["fecha_alta_diagnostico"].max() - pd.Timedelta(days=7))
+            ]
+        else:
+            records["periodo"] = records["fecha_alta_diagnostico"].dt.month
+            ultimos = records[
+                records["fecha_alta_diagnostico"]
+                >= (records["fecha_alta_diagnostico"].max() - pd.Timedelta(days=30))
+            ]
+
+    # --- MODO REPORTE ---
+    elif modo == "reporte":
+        # No agrupar por periodo; se muestran métricas globales
+        records["periodo"] = 1  # valor fijo para mantener compatibilidad con cálculos
+        articulo = "todo el periodo registrado"
+
+    # === Métricas base ===
+    total_lesiones = len(records)
+    activas = records[records["estado_lesion"] == "ACTIVO"].shape[0]
+    porcentaje_activas = round((activas / total_lesiones) * 100, 1) if total_lesiones else 0
+    promedio_dias_baja = round(records["dias_baja_estimado"].mean(), 1) if not records["dias_baja_estimado"].empty else 0
+
+    zona_top = records["zona_cuerpo"].mode()[0] if not records["zona_cuerpo"].empty else "-"
+    zona_count = records["zona_cuerpo"].value_counts().iloc[0] if not records["zona_cuerpo"].empty else 0
+    zona_pct = round((zona_count / total_lesiones) * 100, 1) if total_lesiones else 0
+
+    # === Series por periodo ===
+    trend_total = records.groupby("periodo").size().reset_index(name="cantidad")
+    trend_activas = (
+        records[records["estado_lesion"] == "ACTIVO"]
+        .groupby("periodo")
+        .size()
+        .reset_index(name="count")
+    )
+    trend_dias = (
+        records.groupby("periodo")["dias_baja_estimado"]
+        .mean()
+        .reset_index(name="avg_days")
+        .round(2)
+    )
+    trend_zonas = (
+        records[records["zona_cuerpo"] == zona_top]
+        .groupby("periodo")
+        .size()
+        .reset_index(name="count")
+    )
+
+    chart_total = trend_total["cantidad"].tolist()
+    chart_activas = trend_activas["count"].tolist()
+    chart_dias = trend_dias["avg_days"].tolist()
+    chart_zonas = trend_zonas["count"].tolist()
+
+    # === Calcular deltas ===
+    def calc_delta(values):
+        if len(values) < 2 or values[-2] == 0:
+            return 0
+        return round(((values[-1] - values[-2]) / values[-2]) * 100, 1)
+
+    delta_total = calc_delta(chart_total)
+    delta_activas = calc_delta(chart_activas)
+    delta_dias = calc_delta(chart_dias)
+    delta_zona = calc_delta(chart_zonas)
+
+    # === Visualización de métricas ===
+    col1, col2, col3, col4 = st.columns(4)
+
+    help_texts = (modo == "overview")  # solo mostrar help en modo overview
+
+    with col1:
+        st.metric(
+            "Total de lesiones registradas",
+            total_lesiones,
+            f"{delta_total:+.1f}%",
+            chart_data=chart_total,
+            chart_type="area",
+            border=True,
+            delta_color="normal",
+            help=f"Variación del número total de lesiones comparado con {articulo} {periodo.lower()}."
+            if help_texts else None,
+        )
+    with col2:
+        st.metric(
+            "Lesiones activas",
+            activas,
+            f"{delta_activas:+.1f}%",
+            chart_data=chart_activas,
+            chart_type="line",
+            border=True,
+            delta_color="inverse",
+            help=f"Variación en las lesiones activas respecto a {articulo} {periodo.lower()}."
+            if help_texts else None,
+        )
+    with col3:
+        st.metric(
+            "Días de recuperación promedio",
+            promedio_dias_baja,
+            f"{delta_dias:+.1f}%",
+            chart_data=chart_dias,
+            chart_type="area",
+            border=True,
+            delta_color="normal",
+            help=f"Variación del tiempo promedio de recuperación por {periodo.lower()}."
+            if help_texts else None,
+        )
+    with col4:
+        st.metric(
+            f"Zona más afectada: {zona_top}",
+            f"{zona_count} casos",
+            f"{delta_zona:+.1f}%",
+            chart_data=chart_zonas,
+            chart_type="bar",
+            border=True,
+            delta_color="inverse",
+            help=f"Frecuencia de lesiones en {zona_top} comparado con {articulo} {periodo.lower()}."
+            if help_texts else None,
+        )
+
+    return ultimos

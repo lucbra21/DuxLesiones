@@ -35,7 +35,9 @@ def clean_df(records):
     "fecha_hora_registro",
     "periodo",
     "es_recidiva",
-    "tipo_recidiva"
+    "tipo_recidiva",
+    "evolucion",
+    "periodo"
     #"usuario"
     ]
     # --- eliminar columnas si existen ---
@@ -358,3 +360,4 @@ def generar_lesiones_aleatorias(
 
     print(f"✅ Generadas {len(lesiones)} lesiones en: {output_path}")
     return output_path
+

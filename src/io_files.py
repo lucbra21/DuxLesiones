@@ -318,7 +318,7 @@ def get_records_df() -> pd.DataFrame:
    
     return df
 
-def get_records_plus_players_df() -> pd.DataFrame:
+def get_records_plus_players_df(plantel = None) -> pd.DataFrame:
     """Return all registros as a pandas DataFrame. If none, returns empty DF.
 
     Adds helper columns:
@@ -391,6 +391,10 @@ def get_records_plus_players_df() -> pd.DataFrame:
     ]
 
     df = df.drop(columns=columnas_a_eliminar)
+
+    if plantel:
+        df = df[df["plantel"]==plantel]
+
     return df
 
 
