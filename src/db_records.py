@@ -185,7 +185,11 @@ def load_lesiones_db(as_df=True):
         ORDER BY l.fecha_hora_registro DESC;
         """
 
-        df = pd.read_sql(query, conn)
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        df = pd.DataFrame(rows)
+        cursor.close()
         df["posicion"] = df["posicion"].map(MAP_POSICIONES).fillna(df["posicion"])
 
         return df if as_df else df.to_dict(orient="records")
@@ -297,7 +301,11 @@ def get_records_plus_players_db(plantel: str = None) -> pd.DataFrame:
         ORDER BY l.fecha_hora_registro DESC;
         """
 
-        df = pd.read_sql(query, conn)
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        df = pd.DataFrame(rows)
+        cursor.close()
 
         # Crear columna nombre_jugadora
         df["nombre_jugadora"] = (
@@ -362,7 +370,11 @@ def load_jugadoras_db() -> tuple[pd.DataFrame | None, str | None]:
         ORDER BY f.nombre ASC;
         """
 
-        df = pd.read_sql(query, conn)
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        df = pd.DataFrame(rows)
+        cursor.close()
 
         # Limpiar y preparar los datos
         df["nombre"] = df["nombre"].astype(str).str.strip().str.title()
@@ -412,7 +424,11 @@ def load_competiciones_db() -> tuple[pd.DataFrame | None, str | None]:
         ORDER BY nombre ASC;
         """
 
-        df = pd.read_sql(query, conn)
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        df = pd.DataFrame(rows)
+        cursor.close()
 
         if df.empty:
             return None, ":material/warning: No se encontraron registros en la tabla 'plantel'."
