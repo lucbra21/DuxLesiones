@@ -1,3 +1,6 @@
+import math
+import re
+import numpy as np
 import requests
 import plotly.express as px
 import pandas as pd
@@ -7,6 +10,30 @@ import datetime
 from pathlib import Path
 
 from src.schema import reglas_desactivar_subtipo
+import unicodedata
+
+def normalize_text(s):
+    """Limpia texto eliminando tildes, espacios invisibles y normalizando Unicode."""
+    if not isinstance(s, str):
+        return ""
+    s = s.strip().upper()
+    s = unicodedata.normalize("NFKC", s)  # Normaliza forma Unicode
+    return s
+
+def get_normalized_treatment(lesion_data):
+    # Supongamos que esto viene del registro en la base de datos
+    tipo_tratamiento_raw = lesion_data.get("tipo_tratamiento", "[]")
+
+    # Si es texto JSON (lo normal por tu definición longtext CHECK (json_valid))
+    try:
+        tratamientos_default = json.loads(tipo_tratamiento_raw)
+    except:
+        tratamientos_default = []
+
+    # Aseguramos que sean cadenas limpias y en mayúsculas
+    tratamientos_default = [t.strip().upper() for t in tratamientos_default]
+
+    return tratamientos_default
 
 def get_photo(url):
     try:
@@ -19,26 +46,32 @@ def get_photo(url):
 
 def clean_df(records):
     columnas_excluir = [
-    "id_jugadora",
-    "fecha_hora",
-    #"posicion",
-    "tipo_tratamiento",
-    "diagnostico",
-    "descripcion",
-    "fecha",
-    "fecha_dia",
-    "evolucion",
-    "mecanismo_lesion",
-    "dias_baja_estimado",
-    "fecha_alta_lesion",
-    "fecha_alta_diagnostico",
-    "fecha_hora_registro",
-    "periodo",
-    "es_recidiva",
-    "tipo_recidiva",
-    "evolucion",
-    "periodo"
-    #"usuario"
+        "id_registro",
+        "id_jugadora",
+        "fecha_hora",
+        #"posicion",
+        "tipo_tratamiento",
+        "diagnostico",
+        "descripcion",
+        "fecha",
+        "fecha_dia",
+        "evolucion",
+        "mecanismo",
+        "mecanismo_id",
+        "dias_baja_estimado",
+        "fecha_alta_lesion",
+        "fecha_alta_diagnostico",
+        "fecha_hora_registro",
+        "periodo",
+        "es_recidiva",
+        "tipo_recidiva",
+        "evolucion",
+        "periodo",
+        "lugar_id",
+        "segmento_id",
+        "zona_cuerpo_id",
+        "zona_especifica_id"
+        #"usuario"
     ]
     # --- eliminar columnas si existen ---
     df_filtrado = records.drop(columns=[col for col in columnas_excluir if col in records.columns])
@@ -91,13 +124,16 @@ def grafico_evolucion_lesiones(df: pd.DataFrame):
     df = df.copy()
     df["fecha_lesion"] = pd.to_datetime(df["fecha_lesion"], errors="coerce")
 
+    # Filtrar solo las columnas que existen
+    hover_cols = [col for col in ["tipo_lesion", "zona_cuerpo", "mecanismo", "descripcion"] if col in df.columns]
+
     fig = px.scatter(
         df.sort_values("fecha_lesion"),
         x="fecha_lesion",
         y="dias_baja_estimado",
         color="impacto_dias_baja_estimado",
         size="dias_baja_estimado",
-        hover_data=["tipo_lesion", "zona_cuerpo", "mecanismo_lesion"],
+        hover_data=hover_cols,
         color_discrete_sequence=px.colors.qualitative.Safe,
         title="Evolución temporal de lesiones"
     )
@@ -137,7 +173,7 @@ def grafico_tipo_mecanismo(df: pd.DataFrame):
     fig = px.histogram(
         df,
         x="tipo_lesion",
-        color="mecanismo_lesion",
+        color="mecanismo",
         barmode="group",
         title="Relación entre tipo de lesión y mecanismo",
         color_discrete_sequence=px.colors.qualitative.Pastel
@@ -342,7 +378,7 @@ def generar_lesiones_aleatorias(
                 "dias_baja_estimado": dias_baja,
                 "fecha_alta_lesion": fecha_alta_real.isoformat(),
                 "tipo_lesion": random.choice(tipos_lesion),
-                "mecanismo_lesion": random.choice(mecanismos),
+                "mecanismo": random.choice(mecanismos),
                 "personal_reporta": random.choice(["Dr. López", "Dra. García", "Fisio Martín", "Dra. Pérez"]),
                 "lateralidad": random.choice(lateralidades),
                 "tipo_tratamiento": random.sample(tratamientos, k=random.randint(1, 3))
@@ -358,6 +394,165 @@ def generar_lesiones_aleatorias(
         for lesion in lesiones:
             f.write(json.dumps(lesion, ensure_ascii=False) + "\n")
 
-    print(f"✅ Generadas {len(lesiones)} lesiones en: {output_path}")
+    #print(f"✅ Generadas {len(lesiones)} lesiones en: {output_path}")
     return output_path
 
+def parse_fecha(value):
+    """
+    Convierte un valor en objeto datetime.date de forma segura.
+
+    Acepta:
+        - str en formato ISO ('YYYY-MM-DD' o 'YYYY-MM-DDTHH:MM:SS')
+        - datetime.date
+        - datetime.datetime
+        - None o vacío
+
+    Devuelve:
+        datetime.date | None
+    """
+    if value is None or (isinstance(value, str) and not value.strip()):
+        return None
+
+    if isinstance(value, datetime.date) and not isinstance(value, datetime.datetime):
+        # Ya es un objeto date
+        return value
+
+    if isinstance(value, datetime.datetime):
+        # Extraer solo la parte de fecha
+        return value.date()
+
+    if isinstance(value, str):
+        try:
+            # Intentar formato ISO estándar
+            return datetime.date.fromisoformat(value.split("T")[0])
+        except Exception:
+            try:
+                # Intentar otros formatos comunes (por compatibilidad)
+                return datetime.datetime.strptime(value, "%Y-%m-%d").date()
+            except Exception:
+                return None
+
+    # Si no es ningún tipo compatible
+    return None
+
+def get_gravedad_por_dias(dias_baja_estimado: float, gravedad_dias: dict) -> tuple[str | None, tuple[float | None, float | None]]:
+    """
+    Determina el nivel de gravedad según los días estimados de baja.
+
+    Args:
+        dias_baja_estimado (float): Días de baja estimados (puede venir de RPE o diagnóstico).
+        gravedad_dias (dict): Diccionario con niveles de gravedad y sus rangos de días.
+                              Ejemplo: {"Leve": (1, 3), "Moderada": (4, 7), "Grave": (8, None)}
+
+    Returns:
+        tuple:
+            - gravedad (str | None): Nivel de gravedad encontrado o None si no coincide.
+            - rango (tuple): Rango de días correspondiente al nivel encontrado.
+    """
+
+    if dias_baja_estimado is None or pd.isna(dias_baja_estimado):
+        return None, (None, None)
+
+    for nivel, (min_dias, max_dias) in gravedad_dias.items():
+        # Saltar rangos completamente vacíos
+        if pd.isna(min_dias) and pd.isna(max_dias):
+            continue
+
+        # Caso: sin límite superior (max_dias vacío o NaN)
+        if pd.isna(max_dias) or max_dias is None:
+            if not pd.isna(min_dias) and dias_baja_estimado >= min_dias:
+                return nivel, (min_dias, max_dias)
+
+        # Caso: rango cerrado válido
+        elif not pd.isna(min_dias) and min_dias <= dias_baja_estimado <= max_dias:
+            return nivel, (min_dias, max_dias)
+
+    # Si no entra en ningún rango
+    return None, (None, None)
+
+def is_valid(value):
+    """Devuelve True si el valor no es None, vacío ni NaN."""
+    if value is None:
+        return False
+    if isinstance(value, str) and value.strip() == "":
+        return False
+    if isinstance(value, (float, np.floating)) and math.isnan(value):
+        return False
+    if pd.isna(value):  # cubre np.nan, pd.NaT y similares
+        return False
+    return True
+
+def generar_id_lesion(nombre: str, id_jugadora: str, ultima_lesion_id: str | None = None, fecha: str | None = None) -> str:
+    """
+    Genera un identificador único de lesión para una jugadora.
+    Formato: <INICIALES><YYYYMMDD>-<INCREMENTAL>
+    
+    - nombre: Nombre completo de la jugadora (en mayúsculas o minúsculas)
+    - id_jugadora: Identificador único de la jugadora
+    - ultima_lesion_id: ID de la última lesión registrada (si existe)
+    - fecha: Fecha opcional (formato 'YYYYMMDD'). Si no se pasa, usa la actual.
+    """
+
+    # --- Obtener iniciales ---
+    partes = nombre.strip().split()
+    iniciales = "".join(p[0].upper() for p in partes if p)
+
+    # --- Fecha actual o pasada ---
+    if fecha is None:
+        fecha = datetime.datetime.now().strftime("%Y%m%d")
+
+    # --- Determinar número incremental ---
+    if not ultima_lesion_id:  # si no hay lesiones previas
+        numero = 1
+    else:
+        # Extraer número final del ID existente (después del guion)
+        match = re.search(r"-(\d+)$", ultima_lesion_id)
+        if match:
+            numero = int(match.group(1)) + 1
+        else:
+            numero = 1  # si no tiene formato esperado, reinicia en 1
+
+    # --- Construir ID ---
+    nuevo_id = f"{iniciales}{fecha}-{numero}"
+    return nuevo_id
+
+def sanitize_lesion_data(lesion_data: dict) -> dict:
+    """
+    Limpia y normaliza los campos de una lesión cargada desde la BD.
+    Convierte todas las fechas a string ISO ('YYYY-MM-DD') o ('YYYY-MM-DDTHH:MM:SS')
+    y decodifica los campos JSON.
+    """
+    clean = {}
+
+    for k, v in lesion_data.items():
+
+        # --- Campos de fecha pura ---
+        if k in ("fecha_lesion", "fecha_alta_diagnostico", "fecha_alta_medica", "fecha_alta_deportiva"):
+            parsed_date = parse_fecha(v)
+            clean[k] = parsed_date.isoformat() if parsed_date else None
+
+        # --- Campo con fecha y hora ---
+        elif k == "fecha_hora_registro":
+            if isinstance(v, pd.Timestamp):
+                clean[k] = v.to_pydatetime().isoformat()
+            elif isinstance(v, datetime.datetime):
+                clean[k] = v.isoformat()
+            elif isinstance(v, datetime.date):
+                clean[k] = datetime.datetime.combine(v, datetime.time.min).isoformat()
+            elif isinstance(v, str):
+                # Si ya es una cadena válida, mantenerla
+                clean[k] = v.strip()
+            else:
+                clean[k] = datetime.datetime.now().isoformat()
+
+        # --- JSON almacenado como texto ---
+        elif isinstance(v, str) and v.strip().startswith("["):
+            try:
+                clean[k] = json.loads(v)
+            except json.JSONDecodeError:
+                clean[k] = v
+
+        else:
+            clean[k] = v
+
+    return clean

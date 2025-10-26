@@ -3,10 +3,10 @@ import streamlit as st
 import src.config as config
 config.init_config()
 
-from src.io_files import get_records_df, load_jugadoras, upsert_jsonl, load_competiciones
-from src.ui_components import view_registro_lesion, data_filters
+from src.records_ui import view_registro_lesion
+from src.ui_components import data_filters
 from src.auth import init_app_state, login_view, menu, validate_login
-from src.util import clean_df
+from src.util import clean_df, sanitize_lesion_data
 
 init_app_state()
 validate_login()
@@ -33,9 +33,22 @@ if not jugadora_seleccionada:
     st.info("Selecciona una jugadora para continuar.")
     st.stop()
 
-nombre_completo = (jugadora_seleccionada["nombre"] + " " + jugadora_seleccionada["apellido"]).upper()
-records = records[records["id_jugadora"] == jugadora_seleccionada["identificacion"]]
+if jugadora_seleccionada and isinstance(jugadora_seleccionada, dict):
+    nombre_completo = (jugadora_seleccionada["nombre"] + " " + jugadora_seleccionada["apellido"]).upper()
+    id_jugadora = jugadora_seleccionada["identificacion"]
+    posicion = jugadora_seleccionada["posicion"]
 
+    jugadora_info = {
+        "id_jugadora": jugadora_seleccionada.get("identificacion"),
+        "nombre_completo": f"{jugadora_seleccionada.get('nombre', '')} {jugadora_seleccionada.get('apellido', '')}".upper().strip(),
+        "posicion": jugadora_seleccionada.get("posicion"),
+        "id_lesion": None
+    }
+
+    records = records[records["id_jugadora"] == jugadora_seleccionada["identificacion"]]
+
+#nombre_completo = (jugadora_seleccionada["nombre"] + " " + jugadora_seleccionada["apellido"]).upper()
+    
 # if records.empty:
 #     st.warning("No hay datos que mostrar para la jugadora seleccionada.")
 #     st.stop()
@@ -46,11 +59,11 @@ df_filtrado = clean_df(records)
 st.dataframe(df_filtrado)
 
 #st.divider()
-st.subheader("Añadir seguimiento", divider="red")
+st.subheader(":red[Buscar] lesión", divider="red")
 col1, col2 = st.columns([1,2])
 
 with col1:
-    input_id = st.text_input("Introduce el ID de la lesión:", placeholder="Ejemplo: AJB20251013-4")
+    input_id = st.text_input("Introduce el ID de la lesión:", value="AC20251026-2", placeholder="Ejemplo: AJB20251013-4")
 
 # Si se introduce un ID y se presiona Enter
 if input_id:
@@ -65,7 +78,8 @@ if input_id:
 
     if not lesion.empty:
         lesion_data = lesion.iloc[0].to_dict()
-        with st.expander(f"Registro médico de la lesión",expanded=True):
-            view_registro_lesion(modo="editar", jugadora_seleccionada=jugadora_seleccionada, lesion_data=lesion_data)
+        lesion_data = sanitize_lesion_data(lesion_data)
+        #with st.expander(f"Registro médico de la lesión",expanded=True):
+        view_registro_lesion(modo="editar", jugadora_info=jugadora_info, lesion_data=lesion_data)
     else:
         st.error("No se encontró ninguna lesion con ese ID.")

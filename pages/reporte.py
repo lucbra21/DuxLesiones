@@ -3,7 +3,7 @@ import src.config as config
 config.init_config()
 
 from src.auth import init_app_state, login_view, menu, validate_login
-from src.io_files import get_records_df
+
 from src.ui_components import data_filters,player_block_dux, main_metrics
 from src.util import (grafico_zonas_lesionadas, grafico_tipo_mecanismo, grafico_evolucion_lesiones, 
                       grafico_tratamientos, grafico_dias_baja, grafico_recidivas, clean_df)
@@ -26,6 +26,8 @@ st.divider()
 
 player_block_dux(jugadora_seleccionada)
 resumen = main_metrics(records, modo="reporte")
+
+#st.dataframe(records)
 
 tab1, tab2 = st.tabs(["Graficos", "Tablas"])
 

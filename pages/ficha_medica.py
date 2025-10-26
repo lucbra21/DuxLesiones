@@ -3,7 +3,6 @@ import src.config as config
 config.init_config()
 
 from src.auth import init_app_state, login_view, menu, validate_login
-from src.io_files import get_records_df
 from src.ui_components import data_filters, player_block_dux
 
 import datetime
@@ -101,7 +100,7 @@ if jugadora_seleccionada:
 
     st.divider()
 
-    guardar = st.button("💾 Guardar registro médico", use_container_width=True)
+    guardar = st.button("Guardar registro médico")
 
     if guardar:
         registro = {

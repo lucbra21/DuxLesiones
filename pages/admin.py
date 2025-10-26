@@ -15,7 +15,7 @@ if not st.session_state["auth"]["is_logged_in"]:
     login_view()
     st.stop()
 
-if st.session_state["auth"]["rol"] != "developer":
+if st.session_state["auth"]["rol"].lower() != "developer":
     st.switch_page("app.py")
 
 st.header("Area de:red[Desarrollo]", divider=True)

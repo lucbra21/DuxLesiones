@@ -11,6 +11,14 @@ reglas_desactivar_subtipo = [
     {"mecanismo": "DESCONOCIDO", "tipo": "OTRAS"}
 ]
 
+# Diccionario de equivalencias
+MAP_POSICIONES = {
+    "POR": "Portera",
+    "DEF": "Defensa",
+    "MC": "Centro",
+    "DEL": "Delantera"
+}
+
 #segmentos_corporales = ["TREN SUPERIOR", "TRONCO / MEDIO", "TREN INFERIOR"]
 
 # zonas_por_segmento = {

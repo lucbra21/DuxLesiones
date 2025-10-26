@@ -1,7 +1,4 @@
-import pandas as pd
 import streamlit as st
-from src.io_files import save_if_modified, load_jugadoras, get_records_plus_players_df
-
 import src.config as config
 config.init_config()
 from src.util import clean_df
@@ -23,15 +20,13 @@ st.header("Administrador de :red[Registros]", divider=True)
 
 menu()
 
-#df = get_records_plus_players_df()
 jugadora_seleccionada, posicion, records = data_filters(modo=3)
-#df_filtrado = clean_df(records)
 
 disabled = records.columns.tolist()
-df_edited = st.data_editor(records, num_rows="dynamic", disabled=disabled)
-
-save_if_modified(records, df_edited)
-csv_data = df_edited.to_csv(index=False).encode("utf-8")
+#df_edited = st.data_editor(records, num_rows="dynamic", disabled=disabled)
+st.dataframe(records, hide_index=True)
+# save_if_modified(records, df_edited)
+csv_data = records.to_csv(index=False).encode("utf-8")
 
 st.download_button(
         label="Descargar registros en CSV",
@@ -40,9 +35,9 @@ st.download_button(
         mime="text/csv"
     )
 
-if st.session_state["auth"]["rol"] == "developer":
+if st.session_state["auth"]["rol"].lower() == "developer":
     # Convertir a JSON (texto legible, sin índices)
-    json_data = df_edited.to_json(orient="records", force_ascii=False, indent=2)
+    json_data = records.to_json(orient="records", force_ascii=False, indent=2)
     json_bytes = json_data.encode("utf-8")
 
     # Botón de descarga
