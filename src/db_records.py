@@ -190,6 +190,11 @@ def load_lesiones_db(as_df=True):
         rows = cursor.fetchall()
         df = pd.DataFrame(rows)
         cursor.close()
+
+        if not rows:
+            st.info(":material/info: No existen registros de lesiones en la base de datos.")
+            st.stop()
+            
         df["posicion"] = df["posicion"].map(MAP_POSICIONES).fillna(df["posicion"])
 
         return df if as_df else df.to_dict(orient="records")
@@ -306,6 +311,10 @@ def get_records_plus_players_db(plantel: str = None) -> pd.DataFrame:
         rows = cursor.fetchall()
         df = pd.DataFrame(rows)
         cursor.close()
+
+        if not rows:
+            st.info(":material/info: No existen registros de lesiones en la base de datos.")
+            st.stop()
 
         # Crear columna nombre_jugadora
         df["nombre_jugadora"] = (
