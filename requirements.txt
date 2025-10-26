@@ -4,3 +4,7 @@ numpy>=1.26
 PyJWT>=2.8
 st-cookies-manager>=0.2.0
 plotly
+mysqlclient
+SQLAlchemy
+bcrypt==4.1.2
+#mysql-connector-python==9.0.0

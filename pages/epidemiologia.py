@@ -1,7 +1,5 @@
 import streamlit as st
-import pandas as pd
 import plotly.express as px
-import numpy as np 
 
 import src.config as config
 config.init_config()
@@ -61,7 +59,7 @@ with graficos:
             color_discrete_sequence=px.colors.qualitative.Pastel
         )
         fig_tipo.update_traces(textinfo='percent+label')
-        st.plotly_chart(fig_tipo, use_container_width=True)
+        st.plotly_chart(fig_tipo)
 
         #st.subheader("3. Lesiones por Lugar de Ocurrencia")
         # KPI 3: Lesiones por Lugar (Gráfico de Barras)
@@ -76,7 +74,7 @@ with graficos:
             title='Lesiones por Lugar de Ocurrencia'
         )
         fig_lugar.update_layout(xaxis_title="", yaxis_title="Número de Lesiones")
-        st.plotly_chart(fig_lugar, use_container_width=True)
+        st.plotly_chart(fig_lugar)
 
 
     # --- GRÁFICOS EN COLUMNA DERECHA ---
@@ -97,7 +95,7 @@ with graficos:
             title='Concentración por Zona del Cuerpo'
         )
         fig_zona.update_layout(xaxis_title="Número de Lesiones", yaxis_title="")
-        st.plotly_chart(fig_zona, use_container_width=True)
+        st.plotly_chart(fig_zona)
 
         #st.subheader("4. Tiempo de Baja por Tipo de Lesión")
         # KPI 4: Tiempo Promedio de Baja por Tipo de Lesión (Gráfico de Barras)
@@ -112,7 +110,7 @@ with graficos:
             title='Tiempo de Baja por Tipo de Lesión'
         )
         fig_tiempo.update_layout(yaxis_title="Días de Baja (Estimado)")
-        st.plotly_chart(fig_tiempo, use_container_width=True)
+        st.plotly_chart(fig_tiempo)
 
 with tablas:
     records = get_records_plus_players_df()

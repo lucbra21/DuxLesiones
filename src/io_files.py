@@ -108,7 +108,6 @@ def load_users():
         st.error(f"Error inesperado al cargar usuarios: {e}")
         return []
 
-
 def _ensure_data_dir():
     """
     Creates the 'data' directory if it doesn't exist.
@@ -397,7 +396,6 @@ def get_records_plus_players_df(plantel = None) -> pd.DataFrame:
 
     return df
 
-
 def append_jsonl(record: dict) -> None:
     """Append a dict as one line of JSON to the registros.jsonl file."""
     _ensure_data_dir()
@@ -407,7 +405,6 @@ def append_jsonl(record: dict) -> None:
             pass
     with open(REGISTROS_JSONL, "a", encoding="utf-8") as f:
         f.write(json.dumps(record, ensure_ascii=False) + "\n")
-
 
 def registrar_lesion(data):
     try:
