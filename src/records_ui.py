@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 import json
 
-from src.util import (debe_deshabilitar_subtipo, is_valid, parse_fecha, get_gravedad_por_dias, get_normalized_treatment)
+from src.util import (debe_deshabilitar_subtipo, is_valid, parse_fecha, get_gravedad_por_dias, get_normalized_treatment, to_date)
 
 from src.db_catalogs import load_catalog_list_db
 from src.db_records import save_lesion
@@ -107,6 +107,7 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_info: str = None, lesion_
         dias_baja_estimado = int(lesion_data.get("dias_baja_estimado", 0))
         
         tratamientos_default = get_normalized_treatment(lesion_data)
+        tratamientos_default = [t for t in tratamientos_default if t in tratamientos_list]
         
         es_recidiva_value = lesion_data.get("es_recidiva")
 
@@ -371,7 +372,8 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_info: str = None, lesion_
         col1, col2, col3 = st.columns([1,2,1])    
         
         with col1:
-            fecha_control = st.date_input("Fecha de control", datetime.date.today(), disabled=disabled_evolution)
+            fecha_control = st.date_input("Fecha de control", datetime.date.today(), max_value=datetime.date.today(), disabled=disabled_evolution,
+                                          key=f"fecha_control_{st.session_state['form_version']}")
         with col2:
             tratamiento_aplicado = st.multiselect("Tratamiento Aplicado", tratamientos_list, placeholder="Selecciona uno o más", 
                                                   max_selections=15, disabled=disabled_evolution,
@@ -390,9 +392,10 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_info: str = None, lesion_
 
             if alta_medica:
                 if not fecha_alta_medica:
-                    fecha_alta_medica = (datetime.datetime.now() + datetime.timedelta(days=1)).strftime("%Y-%m-%d")
+                    fecha_alta_medica = fecha_control
+                    
                 
-                fecha_alta_medica = st.date_input("Fecha alta médica", value=fecha_alta_medica, disabled=alta_medica_value)
+                #fecha_alta_medica = st.date_input("Fecha alta médica", value=fecha_alta_medica, disabled=alta_medica_value)
 
         with col2: 
             if alta_medica_value:
@@ -400,10 +403,15 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_info: str = None, lesion_
 
                 if alta_deportiva:
                     if not fecha_alta_deportiva:
-                        fecha_alta_deportiva = (datetime.datetime.now() + datetime.timedelta(days=1)).strftime("%Y-%m-%d")
+                        fecha_alta_deportiva = fecha_control
+                        
                 
-                    fecha_alta_deportiva = st.date_input("Fecha alta deportiva", value=fecha_alta_deportiva, disabled=disabled_evolution)
+                    #fecha_alta_deportiva = st.date_input("Fecha alta deportiva", value=fecha_alta_deportiva, disabled=disabled_evolution)
 
+        fecha_alta_deportiva = to_date(fecha_alta_deportiva)
+        fecha_alta_medica = to_date(fecha_alta_medica)
+        fecha_lesion = to_date(fecha_lesion)
+        
         if is_valid(fecha_alta_medica):
             #st.text(fecha_alta_medica)
             if (fecha_alta_medica - fecha_lesion).days < 0:
@@ -413,7 +421,7 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_info: str = None, lesion_
             else:
                 dias_baja_reales = max(0, (fecha_alta_medica - fecha_lesion).days)
                 st.info(f":material/calendar_clock: Días reales de baja médica: {dias_baja_reales} día(s)")
-                #incidencias = incidencias + "\n Alta Médica"
+                incidencias = "Alta Médica" if not incidencias and not alta_medica_value else incidencias
             
         if is_valid(fecha_alta_deportiva):
             if (fecha_alta_deportiva - fecha_alta_medica).days < 0:
@@ -423,9 +431,9 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_info: str = None, lesion_
             else:
                 dias_baja_reales = max(0, (fecha_alta_deportiva - fecha_lesion).days)
                 st.info(f":material/calendar_clock: Días reales de baja deportiva: {dias_baja_reales} día(s)")
-                #incidencias = incidencias + "\n Alta Deportiva"
+                incidencias = "Alta Deportiva" if not incidencias else incidencias
             
-
+        
         ####################################################################################
         show_evolucion_historial(lesion_data)
 
@@ -560,7 +568,7 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_info: str = None, lesion_
                     # Si el guardado fue exitoso
                     
                     st.session_state["flash"] = f":material/done_all: Lesión {record['id_lesion']} guardada correctamente."
-                    time.sleep(5)
+                    time.sleep(3)
                     st.rerun()
                 else:
                     # Si hubo error en save_lesion, desbloquear botón
@@ -578,17 +586,21 @@ if st.session_state.get("flash"):
     st.session_state["flash"] = None
     st.session_state.form_submitted = False
 
+import json
+import pandas as pd
+import streamlit as st
+
 def show_evolucion_historial(lesion_data: dict):
     """
     Muestra el historial de evolución de una lesión a partir del campo JSON 'evolucion' almacenado en la base de datos.
-    
+
     Args:
         lesion_data (dict): Diccionario con la información de la lesión. 
                             Debe incluir el campo 'evolucion' (LONGTEXT JSON válido o lista).
     """
 
     evol_raw = lesion_data.get("evolucion")
-    
+
     # 1. Decodificar según el tipo recibido
     if not evol_raw:
         evolucion_list = []
@@ -609,28 +621,40 @@ def show_evolucion_historial(lesion_data: dict):
         st.info("Sin registros de evolución disponibles.")
         return
 
-    # 3. Convertir a DataFrame para mostrarlo en tabla
+    # 3. Convertir a DataFrame
     df_evol = pd.DataFrame(evolucion_list)
-    
-    # 4. Formatear columnas si existen
-    if "fecha_control" in df_evol.columns:
-        df_evol["fecha_control"] = pd.to_datetime(df_evol["fecha_control"], errors="coerce")
-        df_evol = df_evol.sort_values("fecha_control", ascending=False)
 
+    # 4. Convertir fechas
+    if "fecha_control" in df_evol.columns:
+        df_evol["fecha_control"] = pd.to_datetime(df_evol["fecha_control"], errors="coerce").dt.date  # ✅ solo fecha
+
+    if "fecha_hora_registro" in df_evol.columns:
+        df_evol["fecha_hora_registro"] = pd.to_datetime(df_evol["fecha_hora_registro"], errors="coerce")
+
+    # 5. Ordenar por fecha_hora_registro (más reciente primero)
+    if "fecha_hora_registro" in df_evol.columns:
+        df_evol = df_evol.sort_values("fecha_hora_registro", ascending=False)
+
+    # 6. Formatear tratamiento aplicado
     if "tratamiento_aplicado" in df_evol.columns:
         df_evol["tratamiento_aplicado"] = df_evol["tratamiento_aplicado"].apply(
             lambda x: ", ".join(x) if isinstance(x, list) else x
         )
 
-    # 5. Reordenar columnas para mejor lectura
+    # 7. Reordenar columnas
     columnas_orden = [
-        c for c in ["fecha_control", "tratamiento_aplicado", "personal_seguimiento", "observaciones", "usuario", "fecha_hora_registro"]
-        if c in df_evol.columns
+        c for c in [
+            "fecha_control", "tratamiento_aplicado", "personal_seguimiento",
+            "observaciones", "usuario", "fecha_hora_registro"
+        ] if c in df_evol.columns
     ]
-    #st.dataframe(df_evol)
     df_evol = df_evol[columnas_orden]
 
-    # 6. Mostrar el historial
+    # 8. Mostrar resultados
     st.divider()
-    st.markdown("**Historial de sesiones**")
-    st.dataframe(df_evol)
+    st.markdown("### Historial")
+
+    num_sesiones = len(df_evol)
+    st.caption(f"Total de sesiones registradas: **{num_sesiones}**")
+
+    st.dataframe(df_evol, hide_index=True)

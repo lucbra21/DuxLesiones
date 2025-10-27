@@ -22,7 +22,7 @@ menu()
 jugadora_seleccionada, posicion, records = data_filters(modo=2)
 st.divider()
 
-#records = get_records_df()  # Carga y cachea los datos
+#st.dataframe(records)
 
 if records.empty:    
     st.warning("No hay datos de lesiones disponibles.")
@@ -46,14 +46,29 @@ if jugadora_seleccionada and isinstance(jugadora_seleccionada, dict):
 
     records = records[records["id_jugadora"] == jugadora_seleccionada["identificacion"]]
 
-#nombre_completo = (jugadora_seleccionada["nombre"] + " " + jugadora_seleccionada["apellido"]).upper()
-    
-# if records.empty:
-#     st.warning("No hay datos que mostrar para la jugadora seleccionada.")
-#     st.stop()
+estado_filtro = st.radio(
+    "Filtrar por estatus:",
+    ["Todas", "Activas", "Inactivas"],
+    horizontal=True,
+    index=0
+)
+
+if estado_filtro == "Activas":
+    records = records[records["estado_lesion"].str.lower() == "activo"]
+elif estado_filtro == "Inactivas":
+    records = records[records["estado_lesion"].str.lower() == "inactivo"]
+
+# --- Mensaje dinámico según cantidad ---
+num_lesiones = len(records)
+if num_lesiones == 0:
+    st.info(f"No se encontraron lesiones {estado_filtro.lower()}s")
+    st.stop()
+elif num_lesiones == 1:
+    st.markdown(f"**Se encontró 1 lesión {estado_filtro.lower()[:-1] if estado_filtro != 'Todas' else ''} registrada.**")
+else:
+    st.markdown(f"**Se encontraron {num_lesiones} lesiones {estado_filtro.lower()[:-1] if estado_filtro != 'Todas' else ''} registradas.**")
 
 # === Mostrar resultado ===
-st.markdown(f"**{len(records)} lesiones encontradas**")
 df_filtrado = clean_df(records)
 st.dataframe(df_filtrado)
 

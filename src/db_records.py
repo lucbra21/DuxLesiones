@@ -4,7 +4,7 @@ import streamlit as st
 import json
 from src.schema import MAP_POSICIONES
 from mysql.connector import Error
-from src.util import generar_id_lesion
+from src.util import generar_id_lesion, contar_sesiones
 
 import json
 import streamlit as st
@@ -167,6 +167,7 @@ def load_lesiones_db(as_df=True):
             l.tipo_tratamiento,
             l.personal_reporta,
             l.fecha_alta_diagnostico,
+            l.fecha_alta_deportiva,
             l.fecha_alta_medica,
             l.estado_lesion,
             l.diagnostico,
@@ -194,7 +195,8 @@ def load_lesiones_db(as_df=True):
         if not rows:
             st.info(":material/info: No existen registros de lesiones en la base de datos.")
             st.stop()
-            
+        
+        df["sesiones"] = df["evolucion"].apply(contar_sesiones)
         df["posicion"] = df["posicion"].map(MAP_POSICIONES).fillna(df["posicion"])
 
         if st.session_state["auth"]["rol"].lower() == "developer":
@@ -337,7 +339,8 @@ def get_records_plus_players_db(plantel: str = None) -> pd.DataFrame:
 
         df = df[columnas]
         df["posicion"] = df["posicion"].map(MAP_POSICIONES).fillna(df["posicion"])
-
+        df["sesiones"] = df["evolucion"].apply(contar_sesiones)
+        
         # Filtrar por plantel si se indica
         if plantel:
             df = df[df["plantel"] == plantel]

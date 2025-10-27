@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 import json
 
-from src.util import (get_photo, get_drive_direct_url)
+from src.util import (get_photo, get_drive_direct_url, contar_sesiones)
 from src.db_records import load_jugadoras_db, load_competiciones_db, load_lesiones_db
 from src.schema import MAP_POSICIONES
 
@@ -19,6 +19,7 @@ def data_filters(modo: int = 1):
         col1, col2, col3 = st.columns([2,1,2])
     else:
         records = load_lesiones_db() 
+
         if records.empty:    
             st.warning("No hay datos de lesiones disponibles.")
             st.stop()   
