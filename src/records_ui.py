@@ -68,6 +68,7 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_info: str = None, lesion_
 
     tratamientos = load_catalog_list_db("tratamientos", as_df=True)
     tratamientos_list = tratamientos["nombre"].tolist()
+    #st.text(tratamientos_list)
 
     lugares_df = load_catalog_list_db("lugares", as_df=True)
     map_lugares_nombre_a_id = dict(zip(lugares_df["nombre"], lugares_df["id"]))
@@ -104,7 +105,9 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_info: str = None, lesion_
         descripcion_text = lesion_data.get("descripcion", "")
         personal_reporte_text = lesion_data.get("personal_reporta", "")
         dias_baja_estimado = int(lesion_data.get("dias_baja_estimado", 0))
+        
         tratamientos_default = get_normalized_treatment(lesion_data)
+        
         es_recidiva_value = lesion_data.get("es_recidiva")
 
         try:
@@ -536,7 +539,7 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_info: str = None, lesion_
         st.session_state.form_submitted = False
 
     # Determinar si el botón debe estar deshabilitado
-    disabled_guardar = disabled_evolution or error or st.session_state.form_submitted
+    disabled_guardar = disabled_evolution or error
 
     submitted = st.button(
         "Guardar",
