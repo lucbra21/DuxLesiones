@@ -8,6 +8,7 @@ import json
 import random
 import datetime
 from pathlib import Path
+import streamlit as st
 
 from src.schema import reglas_desactivar_subtipo
 import unicodedata
@@ -20,20 +21,37 @@ def normalize_text(s):
     s = unicodedata.normalize("NFKC", s)  # Normaliza forma Unicode
     return s
 
+import json
+import streamlit as st
+
 def get_normalized_treatment(lesion_data):
-    # Supongamos que esto viene del registro en la base de datos
+    """
+    Normaliza el campo tipo_tratamiento, admitiendo tanto JSON string como lista.
+    """
     tipo_tratamiento_raw = lesion_data.get("tipo_tratamiento", "[]")
 
-    # Si es texto JSON (lo normal por tu definición longtext CHECK (json_valid))
-    try:
-        tratamientos_default = json.loads(tipo_tratamiento_raw)
-    except:
+    # --- Detectar tipo de dato recibido ---
+    if isinstance(tipo_tratamiento_raw, list):
+        tratamientos_default = tipo_tratamiento_raw
+    elif isinstance(tipo_tratamiento_raw, str):
+        try:
+            tratamientos_default = json.loads(tipo_tratamiento_raw)
+        except json.JSONDecodeError:
+            # Si no es JSON válido, lo tratamos como texto plano
+            tratamientos_default = [tipo_tratamiento_raw.strip()]
+    else:
         tratamientos_default = []
 
-    # Aseguramos que sean cadenas limpias y en mayúsculas
-    tratamientos_default = [t.strip().upper() for t in tratamientos_default]
+    #st.text(f"tratamientos_default raw: {tipo_tratamiento_raw}")
+    #st.text(f"tratamientos_default parsed: {tratamientos_default}")
+
+    # --- Normalizar texto final ---
+    tratamientos_default = [
+        str(t).strip().upper() for t in tratamientos_default if t
+    ]
 
     return tratamientos_default
+
 
 def get_photo(url):
     try:
@@ -50,7 +68,7 @@ def clean_df(records):
         "id_jugadora",
         "fecha_hora",
         #"posicion",
-        "tipo_tratamiento",
+        #"tipo_tratamiento",
         "diagnostico",
         "descripcion",
         "fecha",
@@ -70,13 +88,15 @@ def clean_df(records):
         "lugar_id",
         "segmento_id",
         "zona_cuerpo_id",
-        "zona_especifica_id"
+        "zona_especifica_id",
+        "id",
+        "impacto_dias_baja_estimado"
         #"usuario"
     ]
     # --- eliminar columnas si existen ---
     df_filtrado = records.drop(columns=[col for col in columnas_excluir if col in records.columns])
 
-    orden = ["fecha_lesion", "nombre_jugadora", "posicion", "plantel" ,"id_lesion", "lugar", "segmento", "zona_cuerpo", "zona_especifica", "lateralidad", "tipo_lesion", "tipo_especifico", "gravedad", "personal_reporta", "estado_lesion"]
+    orden = ["fecha_lesion", "nombre_jugadora", "posicion", "plantel" ,"id_lesion", "lugar", "segmento", "zona_cuerpo", "zona_especifica", "lateralidad", "tipo_lesion", "tipo_especifico", "gravedad", "tipo_tratamiento", "personal_reporta", "estado_lesion"]
     
     # Solo mantener columnas que realmente existen
     orden_existentes = [c for c in orden if c in df_filtrado.columns]
