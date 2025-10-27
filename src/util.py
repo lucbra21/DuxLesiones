@@ -90,7 +90,9 @@ def clean_df(records):
         "zona_cuerpo_id",
         "zona_especifica_id",
         "id",
-        "impacto_dias_baja_estimado"
+        "impacto_dias_baja_estimado",
+        "nombre",
+        "apellido"
         #"usuario"
     ]
     # --- eliminar columnas si existen ---
