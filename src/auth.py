@@ -46,13 +46,13 @@ def ensure_session_defaults() -> None:
 def login_view() -> None:
     """Render the login form and handle authentication."""
     
-    # password = "fisio2025."
+    #password = "holamundo"
 
     # # Generar hash (bytes)
-    # hashed = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
+    #hashed = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
 
     # # Mostrar (solo para pruebas; en prod NO mostrar hashes)
-    # st.text(hashed.decode("utf-8"))
+    #st.text(hashed.decode("utf-8"))
 
     # # Verificar: primer arg = contraseña en texto plano (bytes), segundo arg = hash (bytes)
     # is_ok = bcrypt.checkpw(password.encode("utf-8"), hashed)
