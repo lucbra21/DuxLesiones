@@ -98,7 +98,7 @@ def clean_df(records):
     # --- eliminar columnas si existen ---
     df_filtrado = records.drop(columns=[col for col in columnas_excluir if col in records.columns])
 
-    orden = ["fecha_lesion", "nombre_jugadora", "posicion", "plantel" ,"id_lesion", "lugar", "segmento", "zona_cuerpo", "zona_especifica", "lateralidad", "tipo_lesion", "tipo_especifico", "gravedad", "tipo_tratamiento", "personal_reporta", "estado_lesion"]
+    orden = ["fecha_lesion", "nombre_jugadora", "posicion", "plantel" ,"id_lesion", "lugar", "segmento", "zona_cuerpo", "zona_especifica", "lateralidad", "tipo_lesion", "tipo_especifico", "gravedad", "tipo_tratamiento", "personal_reporta", "estado_lesion", "sesiones"]
     
     # Solo mantener columnas que realmente existen
     orden_existentes = [c for c in orden if c in df_filtrado.columns]
@@ -504,6 +504,15 @@ def is_valid(value):
         return False
     return True
 
+def to_date(value):
+    """Convierte una cadena o datetime a date (YYYY-MM-DD)."""
+    if isinstance(value, datetime.date):
+        return value
+    try:
+        return pd.to_datetime(value, errors="coerce").date()
+    except Exception:
+        return None
+
 def generar_id_lesion(nombre: str, id_jugadora: str, ultima_lesion_id: str | None = None, fecha: str | None = None) -> str:
     """
     Genera un identificador único de lesión para una jugadora.
@@ -578,3 +587,19 @@ def sanitize_lesion_data(lesion_data: dict) -> dict:
             clean[k] = v
 
     return clean
+
+def contar_sesiones(evol_raw):
+    """Cuenta cuántas sesiones tiene una evolución (campo JSON o lista)."""
+    if not evol_raw:
+        return 0
+    if isinstance(evol_raw, str):
+        try:
+            evol_list = json.loads(evol_raw)
+        except json.JSONDecodeError:
+            return 0
+    elif isinstance(evol_raw, list):
+        evol_list = evol_raw
+    else:
+        return 0
+
+    return len(evol_list) if isinstance(evol_list, list) else 0

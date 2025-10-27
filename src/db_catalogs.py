@@ -16,7 +16,6 @@ def load_catalog_list_db(table_name, as_df=False):
 
     try:
         query = f"SELECT * FROM {table_name} ORDER BY id;"
-        #df = pd.read_sql(query, conn)
 
         cursor = conn.cursor(dictionary=True)
         cursor.execute(query)
