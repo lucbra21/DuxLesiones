@@ -197,6 +197,11 @@ def load_lesiones_db(as_df=True):
             
         df["posicion"] = df["posicion"].map(MAP_POSICIONES).fillna(df["posicion"])
 
+        if st.session_state["auth"]["rol"].lower() == "developer":
+            df = df[df["usuario"]=="developer"]
+        else:
+            df = df[df["usuario"]!="developer"]
+
         return df if as_df else df.to_dict(orient="records")
     except Exception as e:
         st.error(f":material/warning: Error al cargar lesiones: {e}")
@@ -337,6 +342,10 @@ def get_records_plus_players_db(plantel: str = None) -> pd.DataFrame:
         if plantel:
             df = df[df["plantel"] == plantel]
 
+        if st.session_state["auth"]["rol"].lower() == "developer":
+            df = df[df["usuario"]=="developer"]
+        else:
+            df = df[df["usuario"]!="developer"]
         
         return df
 
