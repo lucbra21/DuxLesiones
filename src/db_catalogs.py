@@ -11,7 +11,7 @@ def load_catalog_list_db(table_name, as_df=False):
     """
     conn = get_connection()
     if not conn:
-        st.error("⚠️ No se pudo establecer conexión con la base de datos.")
+        st.error(":material/warning: No se pudo establecer conexión con la base de datos.")
         return pd.DataFrame() if as_df else []
 
     try:

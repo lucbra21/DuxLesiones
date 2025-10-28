@@ -24,6 +24,7 @@ jugadora_seleccionada, posicion, records = data_filters(modo=2)
 
 st.divider()
 
+#st.dataframe(jugadora_seleccionada)
 player_block_dux(jugadora_seleccionada)
 resumen = main_metrics(records, modo="reporte")
 

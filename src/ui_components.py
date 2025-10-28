@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 import json
 
-from src.util import (get_photo, get_drive_direct_url, contar_sesiones)
+from src.util import (get_photo, clean_image_url, calcular_edad)
 from src.db_records import load_jugadoras_db, load_competiciones_db, load_lesiones_db
 from src.schema import MAP_POSICIONES
 
@@ -292,26 +292,25 @@ def player_block_dux(jugadora_seleccionada: dict, unavailable="N/A"):
     if not jugadora_seleccionada or not isinstance(jugadora_seleccionada, dict):
         st.info("Selecciona una jugadora para continuar.")
         st.stop()
-
+    
+    #st.dataframe(jugadora_seleccionada)
     # Extraer información básica
     nombre = jugadora_seleccionada.get("nombre", unavailable).strip().upper()
     apellido = jugadora_seleccionada.get("apellido", "").strip().upper()
     nombre_completo = f"{nombre.capitalize()} {apellido.capitalize()}"
     id_jugadora = jugadora_seleccionada.get("identificacion", unavailable)
     posicion = jugadora_seleccionada.get("posicion", unavailable)
-    pais = jugadora_seleccionada.get("pais", unavailable)
+    pais = jugadora_seleccionada.get("nacionalidad", unavailable)
     fecha_nac = jugadora_seleccionada.get("fecha_nacimiento", unavailable)
     sexo = jugadora_seleccionada.get("sexo", "")
     competicion = jugadora_seleccionada.get("plantel", "")
-    url_drive = jugadora_seleccionada.get("url", "")
+    dorsal = jugadora_seleccionada.get("dorsal", "")
+    url_drive = jugadora_seleccionada.get("foto_url", "")
+
+    dorsal_number = f":red[/ Dorsal #{int(dorsal)}]" if pd.notna(dorsal) else ""
 
     # Calcular edad
-    try:
-        fnac = datetime.datetime.strptime(fecha_nac, "%Y-%m-%d").date()
-        hoy = datetime.date.today()
-        edad = hoy.year - fnac.year - ((hoy.month, hoy.day) < (fnac.month, fnac.day))
-    except Exception:
-        edad = unavailable
+    edad_texto, fnac = calcular_edad(fecha_nac)
 
     # Color temático
     #color = "violet" if sexo.upper() == "F" else "blue"
@@ -328,14 +327,15 @@ def player_block_dux(jugadora_seleccionada: dict, unavailable="N/A"):
         profile_image = "profile"
 
     # Bloque visual
-    st.markdown(f"### {nombre_completo.title()} {genero_icono}")
+    st.markdown(f"### {nombre_completo.title()} {dorsal_number}")
     #st.markdown(f"##### **_:red[Identificación:]_** _{id_jugadora}_ | **_:red[País:]_** _{pais.upper()}_")
 
     col1, col2, col3 = st.columns([1.6, 2, 2])
 
     with col1:
         if pd.notna(url_drive) and url_drive and url_drive != "No Disponible":
-            direct_url = get_drive_direct_url(url_drive)
+            direct_url = clean_image_url(url_drive)
+            #st.text(direct_url)
             response = get_photo(direct_url)
             if response and response.status_code == 200 and 'image' in response.headers.get("Content-Type", ""):
                 st.image(response.content, width=300)
@@ -356,9 +356,9 @@ def player_block_dux(jugadora_seleccionada: dict, unavailable="N/A"):
         #st.markdown(f"**:material/person: Posición:** {posicion.capitalize()}")
         #st.markdown(f"**:material/favorite: Edad:** {edad if edad != unavailable else 'N/A'} años")
 
-        st.metric(label=f":red[:material/globe: País]", value=f"{pais.capitalize()}", border=True)
-        st.metric(label=f":red[:material/person: Posición]", value=f"{posicion.capitalize()}", border=True)
-        st.metric(label=f":red[:material/favorite: Edad]", value=f"{edad if edad != unavailable else 'N/A'} años", border=True)
+        st.metric(label=f":red[:material/globe: País]", value=f"{pais if pais else 'N/A'}", border=True)
+        st.metric(label=f":red[:material/person: Posición]", value=f"{posicion.capitalize() if posicion else 'N/A'}", border=True)
+        st.metric(label=f":red[:material/favorite: Edad]", value=f"{edad_texto}", border=True)
           
     st.divider()
 
