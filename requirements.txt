@@ -6,3 +6,4 @@ st-cookies-manager>=0.2.0
 plotly
 bcrypt==4.1.2
 mysql-connector-python>=9.0.0
+python-dateutil

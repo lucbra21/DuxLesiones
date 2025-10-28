@@ -8,10 +8,12 @@ import json
 import random
 import datetime
 from pathlib import Path
-import streamlit as st
+from urllib.parse import urlparse, urlunparse
 
 from src.schema import reglas_desactivar_subtipo
 import unicodedata
+import datetime
+from dateutil.relativedelta import relativedelta  # pip install python-dateutil
 
 def normalize_text(s):
     """Limpia texto eliminando tildes, espacios invisibles y normalizando Unicode."""
@@ -111,6 +113,63 @@ def clean_df(records):
     df_filtrado.reset_index(drop=True, inplace=True)
     df_filtrado.index = df_filtrado.index + 1
     return df_filtrado
+
+def calcular_edad(fecha_nac):
+    try:
+        # Si viene como string -> convertir
+        if isinstance(fecha_nac, str):
+            fnac = datetime.datetime.strptime(fecha_nac, "%Y-%m-%d").date()
+        elif isinstance(fecha_nac, datetime.date):
+            fnac = fecha_nac
+        else:
+            return "N/A", None
+
+        hoy = datetime.date.today()
+        diff = relativedelta(hoy, fnac)
+
+        edad_anos = diff.years
+        edad_meses = diff.months
+
+        edad_texto = f"{edad_anos} años y {edad_meses} meses"
+        return edad_texto, fnac
+
+    except Exception as e:
+        return f"Error: {e}", None
+
+def clean_image_url(url: str) -> str:
+    """
+    Limpia y normaliza URLs de imágenes:
+    - Si es de Google Drive, la convierte a formato directo de descarga/visualización.
+    - Si tiene parámetros (como '?size=...' o '&lossy=1'), los elimina.
+    - Si ya es una URL limpia, la devuelve igual.
+    """
+
+    if not url or not isinstance(url, str):
+        return ""
+
+    # --- 1️⃣ Caso Google Drive ---
+    if "drive.google.com" in url:
+        # Caso A: /file/d/<ID>/view?usp=sharing
+        match = re.search(r"/d/([a-zA-Z0-9_-]+)", url)
+        if match:
+            file_id = match.group(1)
+            return f"https://drive.google.com/uc?id={file_id}"
+
+        # Caso B: open?id=<ID>
+        match = re.search(r"id=([a-zA-Z0-9_-]+)", url)
+        if match:
+            file_id = match.group(1)
+            return f"https://drive.google.com/uc?id={file_id}"
+
+        # Si no encuentra ID, devuelve sin cambios
+        return url
+
+    # --- 2️⃣ Caso URLs con parámetros (ej. cdn.resfu.com) ---
+    parsed = urlparse(url)
+    # Elimina los parámetros de consulta (?size=...&lossy=...)
+    clean_url = urlunparse((parsed.scheme, parsed.netloc, parsed.path, '', '', ''))
+
+    return clean_url
 
 def get_drive_direct_url(url: str) -> str:
     """

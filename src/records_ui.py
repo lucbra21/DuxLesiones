@@ -421,7 +421,8 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_info: str = None, lesion_
             else:
                 dias_baja_reales = max(0, (fecha_alta_medica - fecha_lesion).days)
                 st.info(f":material/calendar_clock: Días reales de baja médica: {dias_baja_reales} día(s)")
-                incidencias = "Alta Médica" if not incidencias and not alta_medica_value else incidencias
+                incidencias_plus = "Alta Médica" + " + " + incidencias if incidencias else "Alta Médica"
+                incidencias = incidencias_plus if not alta_medica_value else incidencias
             
         if is_valid(fecha_alta_deportiva):
             if (fecha_alta_deportiva - fecha_alta_medica).days < 0:
@@ -431,7 +432,8 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_info: str = None, lesion_
             else:
                 dias_baja_reales = max(0, (fecha_alta_deportiva - fecha_lesion).days)
                 st.info(f":material/calendar_clock: Días reales de baja deportiva: {dias_baja_reales} día(s)")
-                incidencias = "Alta Deportiva" if not incidencias else incidencias
+                incidencias_plus = "Alta Deportiva" + " + " + incidencias if incidencias else "Alta Deportiva"
+                incidencias = incidencias_plus
             
         
         ####################################################################################
