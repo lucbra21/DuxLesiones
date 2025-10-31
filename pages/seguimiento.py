@@ -79,7 +79,7 @@ st.subheader(":red[Buscar] lesión", divider="red")
 col1, col2 = st.columns([1,2])
 
 with col1:
-    input_id = st.text_input("Introduce el ID de la lesión:", value="AC20251031-1", placeholder="Ejemplo: AJB20251013-4")
+    input_id = st.text_input("Introduce el ID de la lesión:", placeholder="Ejemplo: AJB20251013-4")
 
 # Si se introduce un ID y se presiona Enter
 if input_id:

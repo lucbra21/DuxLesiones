@@ -35,9 +35,15 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_info: str = None, lesion_
     if lesion_data and lesion_data["estado_lesion"] == "INACTIVO":
         fecha_alta_medica = lesion_data.get("fecha_alta_medica", None)
         fecha_alta_deportiva = lesion_data.get("fecha_alta_deportiva", None)
+        fecha_observacion_activa = lesion_data.get("fecha_observacion_activa", None)
+        fecha_observacion_inactiva = lesion_data.get("fecha_observacion_inactiva", None)
         
         disabled_evolution = True
-        st.warning(f"La lesión esta **'Inactiva'**, **fecha de alta médica:** {fecha_alta_medica}, **fecha de alta deportiva:** {fecha_alta_deportiva}. No se pueden editar los datos")
+
+        if fecha_observacion_inactiva:
+            st.warning(f"La lesión se encuentra en está en estado **'Inactiva'** desde el {fecha_observacion_inactiva}.")
+        else:
+            st.warning(f"La lesión esta **'Inactiva'**, **fecha de alta médica:** {fecha_alta_medica}, **fecha de alta deportiva:** {fecha_alta_deportiva}. No se pueden editar los datos")
 
     lesion_help ="Lesiones agrupadas según el tejido afectado y mecanismo (criterios FIFA/UEFA)."
     
