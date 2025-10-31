@@ -16,7 +16,7 @@ if not st.session_state["auth"]["is_logged_in"]:
     st.stop()
 
 # --- Encabezado ---
-st.header("Ficha :red[Médica]", divider=True)
+st.header("Ficha :red[médica]", divider=True)
 menu()
 
 # --- Filtros de datos ---

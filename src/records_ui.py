@@ -8,10 +8,10 @@ import pandas as pd
 import numpy as np
 import json
 
-from src.util import (debe_deshabilitar_subtipo, is_valid, parse_fecha, get_gravedad_por_dias, get_normalized_treatment, to_date)
+from src.util import (is_valid, parse_fecha, get_gravedad_por_dias, 
+                      get_normalized_treatment, to_date, date_to_str)
 
 from src.db_catalogs import load_catalog_list_db
-from src.db_records import save_lesion
 from src.ui_components import preview_record
 
 def view_registro_lesion(modo: str = "nuevo", jugadora_info: str = None, lesion_data = None) -> None:
@@ -64,6 +64,7 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_info: str = None, lesion_
     map_subtipos_nombre_a_id = dict(zip(subtipos_df["nombre"], subtipos_df["id"]))
 
     relacion_df = load_catalog_list_db("mecanismo_tipo_lesion", as_df=True)
+    #st.dataframe(relacion_df)
     #map_relacion_df_nombre_a_id = dict(zip(tipos_lesion_df["nombre"], tipos_lesion_df["id"]))
 
     tratamientos = load_catalog_list_db("tratamientos", as_df=True)
@@ -85,6 +86,9 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_info: str = None, lesion_
 
         fecha_lesion_date = parse_fecha(lesion_data["fecha_lesion"])
         fecha_alta_diagnostico_date = parse_fecha(lesion_data["fecha_alta_diagnostico"])
+
+        fecha_observacion_activa_date = parse_fecha(lesion_data["fecha_observacion_activa"])
+        fecha_observacion_inactiva_date = parse_fecha(lesion_data["fecha_observacion_inactiva"])
 
         fecha_alta_medica = lesion_data.get("fecha_alta_medica", None)
         fecha_alta_deportiva = lesion_data.get("fecha_alta_deportiva", None)
@@ -148,15 +152,18 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_info: str = None, lesion_
             
             if is_valid(lesion_data.get("tipo_recidiva")):
                 idx_tipo_recidiva = tipos_recidiva.index(lesion_data["tipo_recidiva"])
-                #st.text(lesion_data.get("tipo_recidiva"))
-                #st.text(f"idx_tipo_recidiva: {idx_tipo_recidiva}")
         except ValueError:
             tipos_recidiva.append(lesion_data["tipo_recidiva"])
             idx_tipo_recidiva = tipos_recidiva.index(lesion_data["tipo_recidiva"])
 
     else:
         fecha_lesion_date = datetime.date.today()
-        fecha_alta_diagnostico_date = datetime.date.today() + datetime.timedelta(days=1)
+        fecha_alta_diagnostico_date = None
+        #fecha_alta_diagnostico_date = datetime.date.today() + datetime.timedelta(days=1)
+
+        fecha_observacion_activa_date = None
+        fecha_observacion_inactiva_date = None
+
         idx_zonas = None
         idx_lugar = None
         idx_mecanismo = None
@@ -174,20 +181,21 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_info: str = None, lesion_
         idx_segmento = None
         gravedad = None
 
+    st.caption(":red[Los campos marcados con * son obligatorios.]")
     #with st.form("form_registro_lesion", clear_on_submit=True, border=False):
     col1, col2, col3, col4, col5 = st.columns(5)
 
     with col1:
-        fecha_lesion = st.date_input("Fecha de la lesión", fecha_lesion_date, 
+        fecha_lesion = st.date_input("Fecha de la lesión *", fecha_lesion_date, 
                                      disabled=disabled_edit, max_value=datetime.date.today(),  
                                      key=f"fecha_lesion_{st.session_state['form_version']}")
         fecha_str = fecha_lesion.strftime("%Y-%m-%d")
 
-        segmento = st.selectbox("Región anatómica", segmentos_corporales_list, 
+        segmento = st.selectbox("Región anatómica *", segmentos_corporales_list, 
                                 index=idx_segmento, disabled=disabled_edit, placeholder=placeholder, 
                                 key=f"segmento_{st.session_state['form_version']}")
     with col2:
-        lugar = st.selectbox("Lugar", lugares_list, index=idx_lugar, disabled=disabled_edit, placeholder=placeholder, 
+        lugar = st.selectbox("Lugar *", lugares_list, index=idx_lugar, disabled=disabled_edit, placeholder=placeholder, 
                              key=f"lugar_{st.session_state['form_version']}")
         
         idx_zonas = 0
@@ -208,10 +216,10 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_info: str = None, lesion_
             except ValueError:
                 idx_zonas = 0
 
-        zona_cuerpo = st.selectbox("Zona anatómica", opciones_tipo_zona, index=idx_zonas, disabled=is_disabled, 
+        zona_cuerpo = st.selectbox("Zona anatómica *", opciones_tipo_zona, index=idx_zonas, disabled=is_disabled, 
                                    placeholder=placeholder, key=f"zona_cuerpo_{st.session_state['form_version']}")
     with col3:
-        mecanismo_lesion = st.selectbox("Mecanismo de lesión", mecanismo_list, index=idx_mecanismo, disabled=disabled_edit, 
+        mecanismo_lesion = st.selectbox("Mecanismo de lesión *", mecanismo_list, index=idx_mecanismo, disabled=disabled_edit, 
                                         placeholder=placeholder, key=f"mecanismo_lesion_{st.session_state['form_version']}")
         
         idx_zona_espec = 0
@@ -232,7 +240,7 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_info: str = None, lesion_
             except ValueError:
                 idx_zona_espec = 0
                 
-        zona_especifica = st.selectbox("Estructura anatómica", opciones_tipo_zona_especifica, index=idx_zona_espec, 
+        zona_especifica = st.selectbox("Estructura anatómica *", opciones_tipo_zona_especifica, index=idx_zona_espec, 
                                        key=f"subregion_{st.session_state['form_version']}", disabled=is_disabled,
                                        placeholder=placeholder)
 
@@ -250,7 +258,7 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_info: str = None, lesion_
                 how="inner"
             )
 
-            tipos_lesion_list = tipos_filtrados["nombre"].tolist()
+            tipos_lesion_list = tipos_filtrados["nombre"].drop_duplicates().tolist()
         else:
             tipos_lesion_list = []
 
@@ -266,7 +274,7 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_info: str = None, lesion_
             except ValueError:
                 idx_tipos_lesion = 0
 
-        tipo_lesion = st.selectbox("Tipo de lesión", opciones_tipo_lesion, index=idx_tipos_lesion, 
+        tipo_lesion = st.selectbox("Tipo de lesión *", opciones_tipo_lesion, index=idx_tipos_lesion, 
                                    disabled=is_disabled, help=lesion_help, placeholder=placeholder, 
                                    key=f"tipo_lesion_{st.session_state['form_version']}")
         
@@ -274,36 +282,56 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_info: str = None, lesion_
     with col5:
         idx_tipo_especifico = 0
 
-        if debe_deshabilitar_subtipo(mecanismo_lesion, tipo_lesion):
-            opciones_tipo = default_list
-            is_disabled = True
-        else: 
-            # Obtener lista de subtipos válidos según la selección
-            if tipo_lesion:
-                tipo_lesion_id = map_tipo_nombre_a_id.get(tipo_lesion)
-                subtipos_filtrados = subtipos_df[subtipos_df["tipo_lesion_id"] == tipo_lesion_id]
+        # if debe_deshabilitar_subtipo(mecanismo_lesion, tipo_lesion):
+        #     opciones_tipo = default_list
+        #     is_disabled = True
+        # else: 
+        # Obtener lista de subtipos válidos según la selección
+        if mecanismo_lesion and tipo_lesion:
+            tipo_lesion_id = map_tipo_nombre_a_id.get(tipo_lesion)
+
+            # Filtrar combinaciones válidas
+            relaciones_validas = relacion_df[
+                (relacion_df["mecanismo_id"] == mecanismo_id) &
+                (relacion_df["tipo_lesion_id"] == tipo_lesion_id)
+            ]
+
+            # Obtener los IDs de subtipos (pueden incluir NULL)
+            subtipos_ids = relaciones_validas["tipo_especifico_id"].dropna().astype(int).tolist()
+
+            if subtipos_ids:
+                subtipos_filtrados = subtipos_df[subtipos_df["id"].isin(subtipos_ids)]
                 subtipos_list = subtipos_filtrados["nombre"].tolist()
+                is_disabled = False
             else:
                 subtipos_list = []
+                is_disabled = True  # no hay subtipos disponibles
 
-            # Si hay subtipos, usarlos; si no, usar el valor por defecto
-            opciones_tipo = subtipos_list if subtipos_list else default_list
-            is_disabled = disabled_edit or not subtipos_list
-        
-            # Establecer índice en modo edición
-            if modo == "editar" and subtipos_list:
-                try:
-                    idx_tipo_especifico = subtipos_list.index(lesion_data.get("tipo_especifico", ""))
-                except ValueError:
-                    idx_tipo_especifico = 0
 
-        tipo_especifico = st.selectbox("Tipo específico", opciones_tipo, index=idx_tipo_especifico, disabled=is_disabled, help=lesion_help, placeholder=placeholder, key=f"tipo_especifico_{st.session_state['form_version']}")
+            #subtipos_filtrados = subtipos_df[subtipos_df["tipo_lesion_id"] == tipo_lesion_id]
+            #subtipos_list = subtipos_filtrados["nombre"].tolist()
+        else:
+            subtipos_list = []
+            is_disabled = True
+
+        # Si hay subtipos, usarlos; si no, usar el valor por defecto
+        opciones_tipo = subtipos_list if subtipos_list else default_list
+        is_disabled = disabled_edit or not subtipos_list
+    
+        # Establecer índice en modo edición
+        if modo == "editar" and subtipos_list:
+            try:
+                idx_tipo_especifico = subtipos_list.index(lesion_data.get("tipo_especifico", ""))
+            except ValueError:
+                idx_tipo_especifico = 0
+
+        tipo_especifico = st.selectbox("Tipo específico *", opciones_tipo, index=idx_tipo_especifico, disabled=is_disabled, help=lesion_help, placeholder=placeholder, key=f"tipo_especifico_{st.session_state['form_version']}")
 
         ############################################
 
     diagnostico = st.text_area("Diagnóstico Médico", disabled=disabled_edit, value=diagnostico_text, key=f"diagnostico_{st.session_state['form_version']}")
 
-    col1, col2, col3 = st.columns([1,2,2])    
+    col1, col2, col3, col4 = st.columns([1,2.5,1,2.5])    
 
     with col1:
         es_recidiva = st.checkbox("Es Recidiva", value=es_recidiva_value, disabled=disabled_edit, 
@@ -319,26 +347,57 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_info: str = None, lesion_
         )
     
     with col3:
-        fecha_alta_diagnostico = st.date_input("Alta Deportiva (estimada)", fecha_alta_diagnostico_date, disabled=disabled_edit, 
-                                               key=f"fecha_alta_diagnostico_{st.session_state['form_version']}")  
+        implica_baja_value = False
+        #st.text(fecha_alta_diagnostico_date)
+        if fecha_alta_diagnostico_date:
+            implica_baja_value = True
 
-    if (fecha_alta_diagnostico - fecha_lesion).days < 0:
+        implica_baja = st.checkbox("Implica Baja", value=implica_baja_value, disabled=disabled_edit, 
+                                  key=f"implica_baja_{st.session_state['form_version']}") 
+
+    with col4:
+        if implica_baja:
+            fecha_alta_diagnostico_date = datetime.date.today() + datetime.timedelta(days=1)
+
+            #st.text(f"fecha_alta_diagnostico_date antes: {fecha_alta_diagnostico_date}")
+            fecha_alta_diagnostico = st.date_input("Alta Deportiva (estimada)", value=datetime.date.today() + datetime.timedelta(days=1),
+                                                disabled=True if not implica_baja or disabled_edit else False, 
+                                                key=f"fecha_alta_diagnostico_1_{st.session_state['form_version']}")  
+        else:
+            fecha_alta_diagnostico = st.date_input("Alta Deportiva (estimada)", value=None,
+                                                disabled=True if not implica_baja or disabled_edit else False, 
+                                                key=f"fecha_alta_diagnostico_2_{st.session_state['form_version']}")  
+            
+        #st.text(f"fecha_alta_diagnostico_date antes: {fecha_alta_diagnostico}")
+    if fecha_alta_diagnostico and (fecha_alta_diagnostico - fecha_lesion).days < 0:
         error = True
         #st.text(f"Error fecha_alta_diagnostico - fecha_lesion: {error}")
         st.warning(":material/warning: La fecha de alta no puede ser anterior a la fecha de registro.")
     else:
-        # --- Cálculo automático de los días de baja ---
-        dias_baja_estimado = max(0, (fecha_alta_diagnostico - fecha_lesion).days)
+        if not fecha_observacion_activa_date:
+            # --- Cálculo automático de los días de baja ---
+            if implica_baja:
+                dias_baja_estimado = max(0, (fecha_alta_diagnostico - fecha_lesion).days)
+                fecha_alta_diagnostico_str = fecha_alta_diagnostico.strftime("%Y-%m-%d")
+                estado_lesion = "ACTIVO"
+            else:
+                dias_baja_estimado = 0
+                fecha_alta_diagnostico = None
+                fecha_alta_diagnostico_str = None
+                estado_lesion = "OBSERVACION"
+        else:
+            estado_lesion = lesion_data["estado_lesion"]
+    st.info(f":material/calendar_clock: Días estimados de baja: {dias_baja_estimado} día(s)")
 
-    #if modo == "editar":
-        st.info(f":material/calendar_clock: Días estimados de baja: {dias_baja_estimado} día(s)")
+    if fecha_observacion_activa_date:
+        st.info(f":material/calendar_clock: La lesión se encuentra en estado: **{estado_lesion}** desde el dia {fecha_observacion_activa_date.strftime('%Y-%m-%d')}")
 
-        # --- Determinar gravedad automáticamente ---
-        gravedad, rango = get_gravedad_por_dias(dias_baja_estimado, gravedad_dias)
+    # --- Determinar gravedad automáticamente ---
+    gravedad, rango = get_gravedad_por_dias(dias_baja_estimado, gravedad_dias)
 
-        if gravedad:
-            texto_rango = f":material/personal_injury: Severidad o Impacto de la lesión según los días de baja: **{gravedad}**" 
-            st.warning(f"{texto_rango}")
+    if gravedad:
+        texto_rango = f":material/personal_injury: Severidad o Impacto de la lesión según los días de baja: **{gravedad}**" 
+        st.warning(f"{texto_rango}")
 
     #------------------------------      
     col1, col2 = st.columns([2,1])   
@@ -348,7 +407,7 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_info: str = None, lesion_
                                           key=f"tipo_tratamiento_{st.session_state['form_version']}")
     
     with col2:
-        personal_reporta = st.text_input("Personal médico que reporta", value=personal_reporte_text, disabled=disabled_edit, 
+        personal_reporta = st.text_input("Personal médico que reporta *", value=personal_reporte_text, disabled=disabled_edit, 
                                          key=f"personal_reporta_{st.session_state['form_version']}")
 
     descripcion = st.text_area("Observaciones / Descripción de la lesión", value=descripcion_text, disabled=disabled_edit, 
@@ -379,64 +438,106 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_info: str = None, lesion_
                                                   max_selections=15, disabled=disabled_evolution,
                                                   key=f"tratamiento_aplicado_{st.session_state['form_version']}")
         with col3:
-            personal_seguimiento = st.text_input("Personal médico", disabled=disabled_evolution,
+            personal_seguimiento = st.text_input("Personal médico *", disabled=disabled_evolution,
                                                  key=f"personal_seguimiento_{st.session_state['form_version']}")
 
         incidencias = st.text_area("Observaciones o incidencias", disabled=disabled_evolution,
                                    key=f"incidencias_{st.session_state['form_version']}")
 
-        col1, col2, col3 = st.columns([1,1,2])    
-        
-        with col1:            
-            alta_medica = st.checkbox("Alta Médica", value=alta_medica_value, disabled=alta_medica_value or disabled_evolution)
-
-            if alta_medica:
-                if not fecha_alta_medica:
-                    fecha_alta_medica = fecha_control
-                    
+        #fecha_lesion = to_date(fecha_lesion)
+            
+        if (fecha_control - fecha_lesion).days < 0:
+            error = True
+            #st.text(f"Error fecha_alta_medica - fecha_lesion): {error}")
+            st.error(":material/warning: La fecha de sesión no puede ser anterior a la fecha de registro de la lesion.")
+            
+        if not fecha_observacion_activa_date and not fecha_observacion_inactiva_date and not fecha_alta_diagnostico_date:
+            
+            st.warning(":material/info: La lesión se encuentra pendiente de su evolución, no representa baja deportiva.")
+            activar_lesion = st.checkbox("Cambiar estado de la lesión", disabled=disabled_evolution)
+            
+            if activar_lesion:
+                estado_lesion_value = st.radio(
+                    "Seleccionar el nuevo estado:",
+                    ["Activa", "Inactiva"],horizontal=True, index=0)
                 
-                #fecha_alta_medica = st.date_input("Fecha alta médica", value=fecha_alta_medica, disabled=alta_medica_value)
+                if estado_lesion_value == "Activa":
+                    fecha_observacion_activa_date = fecha_control
+                    incidencias = "Lesión Activada" + " + " + incidencias if incidencias else "Lesión Activada"
+                    lesion_data["estado_lesion"] = "ACTIVO"
+                    lesion_data["fecha_observacion_activa"] = fecha_observacion_activa_date.strftime("%Y-%m-%d")
+                    st.info(":material/info: Los días de baja se comenzarán a contar a partir de la fecha actual.")
+                else:
+                    fecha_observacion_inactiva_date = fecha_control
+                    incidencias = "Lesión Inactivada" + " + " + incidencias if incidencias else "Lesión Inactivada"
+                    lesion_data["estado_lesion"] = "INACTIVO"
+                    lesion_data["fecha_observacion_inactiva"] = fecha_observacion_inactiva_date.strftime("%Y-%m-%d")
+                    st.info(":material/info: La lesión quedará inactiva y no podrá ser modificada.")
 
-        with col2: 
-            if alta_medica_value:
-                alta_deportiva = st.checkbox("Alta Deportiva", value=alta_deportiva_value, disabled=disabled_evolution)
+            alta_medica = False
+        else:
+            col1, col2, col3 = st.columns([1,1,4])    
+            
+            with col1:
+                alta_medica = st.checkbox("Alta Médica", value=alta_medica_value, disabled=alta_medica_value or disabled_evolution)
 
-                if alta_deportiva:
-                    if not fecha_alta_deportiva:
-                        fecha_alta_deportiva = fecha_control
+                if alta_medica:
+                    if not fecha_alta_medica:
+                        fecha_alta_medica = fecha_control
+
+            with col2: 
+                if alta_medica_value:
+                    alta_deportiva = st.checkbox("Alta Deportiva", value=alta_deportiva_value, disabled=disabled_evolution)
+
+                    if alta_deportiva:
+                        if not fecha_alta_deportiva:
+                            fecha_alta_deportiva = fecha_control
+
+            fecha_alta_deportiva = to_date(fecha_alta_deportiva)
+            fecha_alta_medica = to_date(fecha_alta_medica)
+            
+            dias_baja_medica_reales = None
+            dias_baja_deportiva = None
+            #st.text(f"fecha_alta_medica: {fecha_alta_medica}, fecha_alta_deportiva: {fecha_alta_deportiva}")
+            if is_valid(fecha_alta_medica):
+                
+                if fecha_observacion_activa_date and (fecha_alta_medica - fecha_observacion_activa_date).days < 0:
+                    error = True
+                    st.warning(":material/warning: La fecha de alta médica no puede ser anterior a la fecha de inicio de la lesión.")
+                elif fecha_observacion_activa_date:
+                    dias_baja_medica_reales = max(0, (fecha_alta_medica - fecha_observacion_activa_date).days)
+                else:
+                    if (fecha_alta_medica - fecha_lesion).days < 0:
+                        error = True
+                        st.warning(":material/warning: La fecha de alta médica no puede ser anterior a la fecha de registro de la lesión.")
+                    else:
+                        dias_baja_medica_reales = max(0, (fecha_alta_medica - fecha_lesion).days)
                         
-                
-                    #fecha_alta_deportiva = st.date_input("Fecha alta deportiva", value=fecha_alta_deportiva, disabled=disabled_evolution)
-
-        fecha_alta_deportiva = to_date(fecha_alta_deportiva)
-        fecha_alta_medica = to_date(fecha_alta_medica)
-        fecha_lesion = to_date(fecha_lesion)
-        
-        if is_valid(fecha_alta_medica):
-            #st.text(fecha_alta_medica)
-            if (fecha_alta_medica - fecha_lesion).days < 0:
-                error = True
-                #st.text(f"Error fecha_alta_medica - fecha_lesion): {error}")
-                st.warning(":material/warning: La fecha de alta médica no puede ser anterior a la fecha de registro.")
-            else:
-                dias_baja_reales = max(0, (fecha_alta_medica - fecha_lesion).days)
-                st.info(f":material/calendar_clock: Días reales de baja médica: {dias_baja_reales} día(s)")
                 incidencias_plus = "Alta Médica" + " + " + incidencias if incidencias else "Alta Médica"
                 incidencias = incidencias_plus if not alta_medica_value else incidencias
             
-        if is_valid(fecha_alta_deportiva):
-            if (fecha_alta_deportiva - fecha_alta_medica).days < 0:
-                error = True
-                #st.text(f"Error fecha_alta_deportiva - fecha_alta_medica: {error}")
-                st.warning(":material/warning: La fecha de alta deportiva no puede ser anterior a la fecha de alta médica.")
-            else:
-                dias_baja_reales = max(0, (fecha_alta_deportiva - fecha_lesion).days)
-                st.info(f":material/calendar_clock: Días reales de baja deportiva: {dias_baja_reales} día(s)")
+            if is_valid(fecha_alta_deportiva):
+                if (fecha_alta_deportiva - fecha_alta_medica).days < 0:
+                    error = True
+                    st.warning(":material/warning: La fecha de alta deportiva no puede ser anterior a la fecha de alta médica.")
+                else:
+                    if fecha_observacion_activa_date:
+                        dias_baja_deportiva = max(0, (fecha_alta_deportiva - fecha_observacion_activa_date).days)
+                    else:
+                        dias_baja_deportiva = max(0, (fecha_alta_deportiva - fecha_lesion).days)
+                        #st.info(f":material/calendar_clock: Días reales de baja deportiva: {dias_baja_deportiva} día(s)")
+                
                 incidencias_plus = "Alta Deportiva" + " + " + incidencias if incidencias else "Alta Deportiva"
                 incidencias = incidencias_plus
-            
-        
+
+            #st.text(f"dias_baja_medica_reales: {dias_baja_medica_reales}, dias_baja_deportiva: {dias_baja_deportiva}")
+            if dias_baja_medica_reales is not None:
+                st.info(f":material/calendar_clock: Días reales de baja médica: {dias_baja_medica_reales} día(s)")
+
+            if dias_baja_deportiva is not None:
+                st.info(f":material/calendar_clock: Días reales de baja deportiva: {dias_baja_deportiva} día(s)")
         ####################################################################################
+        #st.divider()
         show_evolucion_historial(lesion_data)
 
         if seguimiento and (not personal_seguimiento or not personal_seguimiento.strip()):
@@ -456,9 +557,9 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_info: str = None, lesion_
     ############# PROCESAMIENTO Y GUARDADO #############  
     tratamientos_str = ([t.upper() for t in tipo_tratamiento] if isinstance(tipo_tratamiento, list) else [])
 
-    if not lugar or not segmento or not zona_cuerpo or not tipo_lesion or not mecanismo_lesion:
+    if (not lugar or not segmento or not zona_cuerpo or not tipo_lesion
+         or not mecanismo_lesion or not personal_reporta):
         error = True
-        #st.text(f"Error not lugar or not segmento or not zona_cuerpo or not tipo_lesion or not mecanismo_lesion: {error}")
 
     #st.text(modo)
     # Construimos el diccionario de la lesión
@@ -494,11 +595,12 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_info: str = None, lesion_
             "mecanismo_id": mecanismo_id,
             "tipo_tratamiento": tratamientos_str,
             "personal_reporta": personal_reporta,
-            "fecha_alta_diagnostico": fecha_alta_diagnostico.strftime("%Y-%m-%d"),
+            "fecha_alta_diagnostico": fecha_alta_diagnostico_str,
             "fecha_alta_medica": None,
             "fecha_alta_deportiva": None,
-            #"fecha_alta_lesion": fecha_alta_lesion.strftime("%Y-%m-%d"),
-            "estado_lesion": "ACTIVO",
+            "fecha_observacion_activa": None,
+            "fecha_observacion_inactiva": None,
+            "estado_lesion": estado_lesion,
             "diagnostico": diagnostico,
             "descripcion": descripcion,
             "evolucion": [],
@@ -528,69 +630,23 @@ def view_registro_lesion(modo: str = "nuevo", jugadora_info: str = None, lesion_
                 lesion_data["fecha_alta_deportiva"] = fecha_alta_deportiva.strftime("%Y-%m-%d")
                 lesion_data["estado_lesion"] = "INACTIVO"
 
+        lesion_data["fecha_observacion_activa"] = date_to_str(lesion_data["fecha_observacion_activa"])
+        lesion_data["fecha_observacion_inactiva"] = date_to_str(lesion_data["fecha_observacion_inactiva"])
+        #date_to_str("fecha_observacion_inactiva", lesion_data)
+
         record = lesion_data
 
-    if st.session_state["auth"]["rol"] == "developer":
+    if st.session_state["auth"]["rol"].lower() == "developer":
         st.divider()
         #st.text(record)
         if st.checkbox("Previsualización"):
-            preview_record(record)
+            preview_record(lesion_data)
             #st.caption(f"Datos almacenados en: {DATA_DIR}/registros.jsonl")
 
     if error:
         st.error("Existen campos obligatorios que debe seleccionar")
 
-    #st.text(st.session_state.form_submitted)
-    #st.text(f"Error: {error}")
-    ######################## GUARDADO Y REINICIO ########################
-    #st.session_state.form_submitted = False
-    # Inicializar control de estado del botón
-    if "form_submitted" not in st.session_state:
-        st.session_state.form_submitted = False
-
-    # Determinar si el botón debe estar deshabilitado
-    disabled_guardar = disabled_evolution or error
-
-    submitted = st.button(
-        "Guardar",
-        disabled=disabled_guardar,
-        type="primary"
-    )
-
-    if submitted:
-        # Evitar dobles clics
-        st.session_state.form_submitted = True
-        st.session_state["form_version"] += 1
-
-        try:
-            with st.spinner("Guardando registro..."):
-                success = save_lesion(record, modo)
-
-                if success:
-                    # Si el guardado fue exitoso
-                    
-                    st.session_state["flash"] = f":material/done_all: Lesión {record['id_lesion']} guardada correctamente."
-                    time.sleep(3)
-                    st.rerun()
-                else:
-                    # Si hubo error en save_lesion, desbloquear botón
-                    st.warning(":material/warning: No se pudo guardar la lesión. Revisa los datos e inténtalo nuevamente.")
-                    st.session_state.form_submitted = False
-
-        except Exception as e:
-            # Captura cualquier error inesperado
-            st.error(f":material/warning: Error inesperado al guardar la lesión: {e}")
-            st.session_state.form_submitted = False
-
-# --- Mostrar mensaje flash tras guardar ---
-if st.session_state.get("flash"):
-    st.success(st.session_state["flash"])
-    st.session_state["flash"] = None
-    st.session_state.form_submitted = False
-
-import json
-import pandas as pd
-import streamlit as st
+    return record, error, disabled_evolution
 
 def show_evolucion_historial(lesion_data: dict):
     """
@@ -600,7 +656,7 @@ def show_evolucion_historial(lesion_data: dict):
         lesion_data (dict): Diccionario con la información de la lesión. 
                             Debe incluir el campo 'evolucion' (LONGTEXT JSON válido o lista).
     """
-
+    
     evol_raw = lesion_data.get("evolucion")
 
     # 1. Decodificar según el tipo recibido
@@ -620,6 +676,7 @@ def show_evolucion_historial(lesion_data: dict):
 
     # 2. Validar que sea una lista con registros
     if not isinstance(evolucion_list, list) or len(evolucion_list) == 0:
+        st.divider()
         st.info("Sin registros de evolución disponibles.")
         return
 

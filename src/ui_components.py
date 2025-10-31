@@ -128,7 +128,6 @@ def data_filters_advanced():
         st.warning("No hay datos de lesiones disponibles.")
         st.stop()   
 
-
     # --- Validación básica ---
     if jug_df is None or jug_df.empty or records is None or records.empty:
         st.warning("No hay datos disponibles para aplicar filtros.")

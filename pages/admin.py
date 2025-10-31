@@ -24,7 +24,7 @@ st.header("Area de:red[Desarrollo]", divider=True)
 
 menu()
 
-usuarios, simulador = st.tabs(["USUARIOS", "SIMULADOR"])
+usuarios, simulador, bd = st.tabs(["USUARIOS", "SIMULADOR", "BASE DE DATOS"])
 with usuarios:
     data = load_users()
     df = pd.DataFrame(data)
@@ -57,4 +57,7 @@ with simulador:
         except Exception as e:
                 st.error(f"❌ Error al generar lesiones: {e}")
 
-
+with bd:
+    if st.button(":material/update: Recargar datos"):
+        st.cache_data.clear()
+        st.experimental_rerun()

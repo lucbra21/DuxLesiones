@@ -16,7 +16,7 @@ if not st.session_state["auth"]["is_logged_in"]:
     login_view()
     st.stop()
 
-st.header("Análisis :red[Individual]", divider=True)
+st.header("Análisis :red[individual]", divider=True)
 
 menu()
 
