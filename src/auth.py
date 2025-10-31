@@ -46,7 +46,7 @@ def ensure_session_defaults() -> None:
 def login_view() -> None:
     """Render the login form and handle authentication."""
     
-    #password = "holamundo"
+    #password = "duxlogrono."
 
     # # Generar hash (bytes)
     #hashed = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())

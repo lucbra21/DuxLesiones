@@ -19,7 +19,7 @@ if not st.session_state["auth"]["is_logged_in"]:
     login_view()
     st.stop()
 
-st.header("Análisis :red[Epidemiológico]", divider=True)
+st.header("Análisis :red[epidemiológico]", divider=True)
 
 menu()
 

@@ -13,10 +13,10 @@ if not st.session_state["auth"]["is_logged_in"]:
     login_view()
     st.stop()
 
-if st.session_state["auth"]["rol"].lower() != "admin":
+if st.session_state["auth"]["rol"].lower() != "developer":
     st.switch_page("app.py")
     
-st.header("Administrador de :red[Registros]", divider=True)
+st.header("Administrador de :red[egistros]", divider=True)
 
 menu()
 

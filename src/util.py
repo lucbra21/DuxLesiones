@@ -10,7 +10,6 @@ import datetime
 from pathlib import Path
 from urllib.parse import urlparse, urlunparse
 
-from src.schema import reglas_desactivar_subtipo
 import unicodedata
 import datetime
 from dateutil.relativedelta import relativedelta  # pip install python-dateutil
@@ -336,16 +335,6 @@ def grafico_recidivas(df: pd.DataFrame):
     fig.update_layout(template="simple_white", height=350)
     return fig
 
-def debe_deshabilitar_subtipo(mecanismo: str, tipo: str) -> bool:
-    """
-    Determina si debe deshabilitarse el selector de tipo específico 
-    según las reglas clínicas establecidas.
-    """
-    return any(
-        r["mecanismo"] == mecanismo and r["tipo"] == tipo
-        for r in reglas_desactivar_subtipo
-    )
-
 def load_lesiones_jsonl(path: str | Path) -> tuple[pd.DataFrame | None, str | None]:
     """
     Carga un archivo JSONL de lesiones y lo convierte en un DataFrame.
@@ -570,6 +559,14 @@ def to_date(value):
     try:
         return pd.to_datetime(value, errors="coerce").date()
     except Exception:
+        return None
+    
+def date_to_str(fecha):
+    if isinstance(fecha, (datetime.date, datetime.datetime)):
+        return fecha.strftime("%Y-%m-%d")
+    elif isinstance(fecha, str):
+        return fecha  
+    else:
         return None
 
 def generar_id_lesion(nombre: str, id_jugadora: str, ultima_lesion_id: str | None = None, fecha: str | None = None) -> str:

@@ -38,7 +38,8 @@ def save_lesion(data: dict, modo: str = "nuevo") -> bool:
             "tipo_lesion_id", "tipo_especifico_id", "es_recidiva", "tipo_recidiva",
             "dias_baja_estimado", "impacto_dias_baja_estimado", "mecanismo_id",
             "tipo_tratamiento", "personal_reporta", "fecha_alta_diagnostico",
-            "fecha_alta_medica", "fecha_alta_deportiva", "estado_lesion",
+            "fecha_observacion_activa", "fecha_observacion_inactiva", "fecha_alta_medica", 
+            "fecha_alta_deportiva", "estado_lesion",
             "diagnostico", "descripcion", "evolucion", "fecha_hora_registro", "usuario"
         }
 
@@ -71,7 +72,7 @@ def save_lesion(data: dict, modo: str = "nuevo") -> bool:
 
             cursor.execute(query_insert, data)
             conn.commit()
-            st.success(f":material/done_all: Lesión **{data['id_lesion']}** insertada correctamente.")
+            #st.success(f":material/done_all: Lesión **{data['id_lesion']}** insertada correctamente.")
             return True
 
         # ============================================================
@@ -85,6 +86,8 @@ def save_lesion(data: dict, modo: str = "nuevo") -> bool:
 
             params = {
                 "evolucion": data.get("evolucion"),
+                "fecha_observacion_activa": data.get("fecha_observacion_activa"),
+                "fecha_observacion_inactiva": data.get("fecha_observacion_inactiva"),
                 "fecha_alta_medica": data.get("fecha_alta_medica"),
                 "fecha_alta_deportiva": data.get("fecha_alta_deportiva"),
                 "estado_lesion": data.get("estado_lesion"),
@@ -98,6 +101,8 @@ def save_lesion(data: dict, modo: str = "nuevo") -> bool:
                 evolucion = %(evolucion)s,
                 fecha_alta_medica = %(fecha_alta_medica)s,
                 fecha_alta_deportiva = %(fecha_alta_deportiva)s,
+                fecha_observacion_activa = %(fecha_observacion_activa)s,
+                fecha_observacion_inactiva = %(fecha_observacion_inactiva)s,
                 estado_lesion = %(estado_lesion)s,
                 descripcion = %(descripcion)s,
                 updated_at = CURRENT_TIMESTAMP
@@ -105,14 +110,15 @@ def save_lesion(data: dict, modo: str = "nuevo") -> bool:
             """
 
             # --- Modo developer: mostrar query y params ---
-            if st.session_state.get("auth", {}).get("rol") == "developer":
+            #if st.session_state.get("auth", {}).get("rol").lower() == "developer":
+            if st.session_state["auth"]["rol"].lower() == "developer":    
                 st.write("🟡 Query UPDATE ejecutada:")
                 st.code(query_update, language="sql")
                 st.json(params)
 
             cursor.execute(query_update, params)
             conn.commit()
-            st.success(f":material/done_all: Lesión **{id_lesion}** actualizada correctamente.")
+            #st.success(f":material/done_all: Lesión **{id_lesion}** actualizada correctamente.")
             return True
 
         else:
@@ -169,6 +175,8 @@ def load_lesiones_db(as_df=True):
             l.fecha_alta_diagnostico,
             l.fecha_alta_deportiva,
             l.fecha_alta_medica,
+            l.fecha_observacion_activa,
+            l.fecha_observacion_inactiva,
             l.estado_lesion,
             l.diagnostico,
             l.descripcion,
