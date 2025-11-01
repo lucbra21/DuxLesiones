@@ -477,3 +477,34 @@ def load_competiciones_db() -> tuple[pd.DataFrame | None, str | None]:
 
     finally:
         conn.close()
+
+def delete_lesiones(ids: list[int]) -> tuple[bool, str]:
+    """
+    Elimina múltiples lesiones desde la base de datos.
+
+    Parámetros:
+        ids (list[int]): lista de IDs de lesiones a eliminar.
+
+    Retorna:
+        (bool, str): (éxito, mensaje)
+    """
+    if not ids:
+        return False, "No se proporcionaron IDs de lesiones."
+
+    try:
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        # Construir la query dinámica con placeholders
+        query = f"DELETE FROM lesiones WHERE id_lesion IN ({','.join(['%s'] * len(ids))})"
+        cursor.execute(query, tuple(ids))
+        conn.commit()
+
+        cursor.close()
+        conn.close()
+
+        return True, f"✅ Se eliminaron {cursor.rowcount} registro(s) correctamente."
+
+    except Exception as e:
+        st.error(f":material/warning: Error al eliminar lesiones: {e}")
+        return False, f":material/warning: Error al eliminar lesiones: {e}"

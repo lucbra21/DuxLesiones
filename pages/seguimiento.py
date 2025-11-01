@@ -74,6 +74,7 @@ else:
 df_filtrado = clean_df(records)
 st.dataframe(df_filtrado)
 
+
 #st.divider()
 st.subheader(":red[Buscar] lesión", divider="red")
 col1, col2 = st.columns([1,2])
@@ -101,54 +102,54 @@ if input_id:
         st.error("No se encontró ninguna lesion con ese ID.")
         st.stop()
 
-######################## GUARDADO Y REINICIO ########################
-#st.session_state.form_submitted = False
-# Inicializar control de estado del botón
-if "form_submitted" not in st.session_state:
-    st.session_state.form_submitted = False
-
-# Determinar si el botón debe estar deshabilitado
-disabled_guardar = disabled_evolution or error
-
-submitted = st.button("Guardar",disabled=disabled_guardar, type="primary")
-success = False
-
-if submitted:
-    # Evitar dobles clics
-    st.session_state.form_submitted = True
-    st.session_state["form_version"] += 1
-
-    try:
-        with st.spinner("Actualizando lesión..."):
-            success = save_lesion(record, "editar")
-
-            if success:
-                # Si el guardado fue exitoso
-                
-                st.session_state["flash"] = f":material/done_all: Lesión guardada correctamente."
-                #{record['id_lesion']}
-                #st.rerun()
-                time.sleep(4)
-                #st.switch_page("pages/switch.py")
-                #st.markdown("""<script>window.scrollTo({top: 0, behavior: 'smooth'});</script>""", unsafe_allow_html=True)
-                
-            else:
-                # Si hubo error en save_lesion, desbloquear botón
-                st.warning(":material/warning: No se pudo guardar la lesión. Revisa los datos e inténtalo nuevamente.")
-                st.session_state.form_submitted = False
-
-    except Exception as e:
-        # Captura cualquier error inesperado
-        st.error(f":material/warning: Error inesperado al guardar la lesión: {e}")
+    ######################## GUARDADO Y REINICIO ########################
+    #st.session_state.form_submitted = False
+    # Inicializar control de estado del botón
+    if "form_submitted" not in st.session_state:
         st.session_state.form_submitted = False
 
-# --- Mostrar mensaje flash tras guardar ---
-if st.session_state.get("flash"):
-    st.success(st.session_state["flash"])
-    st.session_state["flash"] = None
-    st.session_state.form_submitted = False
+    # Determinar si el botón debe estar deshabilitado
+    disabled_guardar = disabled_evolution or error
 
-if success:
-    st.rerun()
-    # st.session_state["target_page"] = "seguimiento"
-    # st.switch_page("pages/switch.py")
+    submitted = st.button("Guardar",disabled=disabled_guardar, type="primary")
+    success = False
+
+    if submitted:
+        # Evitar dobles clics
+        st.session_state.form_submitted = True
+        st.session_state["form_version"] += 1
+
+        try:
+            with st.spinner("Actualizando lesión..."):
+                success = save_lesion(record, "editar")
+
+                if success:
+                    # Si el guardado fue exitoso
+                    
+                    st.session_state["flash"] = f":material/done_all: Lesión guardada correctamente."
+                    #{record['id_lesion']}
+                    #st.rerun()
+                    time.sleep(4)
+                    #st.switch_page("pages/switch.py")
+                    #st.markdown("""<script>window.scrollTo({top: 0, behavior: 'smooth'});</script>""", unsafe_allow_html=True)
+                    
+                else:
+                    # Si hubo error en save_lesion, desbloquear botón
+                    st.warning(":material/warning: No se pudo guardar la lesión. Revisa los datos e inténtalo nuevamente.")
+                    st.session_state.form_submitted = False
+
+        except Exception as e:
+            # Captura cualquier error inesperado
+            st.error(f":material/warning: Error inesperado al guardar la lesión: {e}")
+            st.session_state.form_submitted = False
+
+    # --- Mostrar mensaje flash tras guardar ---
+    if st.session_state.get("flash"):
+        st.success(st.session_state["flash"])
+        st.session_state["flash"] = None
+        st.session_state.form_submitted = False
+
+    if success:
+        st.rerun()
+        # st.session_state["target_page"] = "seguimiento"
+        # st.switch_page("pages/switch.py")
