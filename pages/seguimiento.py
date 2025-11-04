@@ -132,7 +132,6 @@ if input_id:
                     time.sleep(4)
                     #st.switch_page("pages/switch.py")
                     #st.markdown("""<script>window.scrollTo({top: 0, behavior: 'smooth'});</script>""", unsafe_allow_html=True)
-                        
                 else:
                     # Si hubo error en save_lesion, desbloquear botón
                     st.warning(":material/warning: No se pudo guardar la lesión. Revisa los datos e inténtalo nuevamente.")

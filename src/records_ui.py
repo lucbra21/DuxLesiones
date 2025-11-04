@@ -1,9 +1,9 @@
+import time
 import streamlit as st
 import datetime
 from src.io_files import load_catalog_list
 import pandas as pd
-
-import pandas as pd
+import numpy as np
 import json
 
 from src.util import (is_valid, parse_fecha, get_gravedad_por_dias, 
