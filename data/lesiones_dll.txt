@@ -1,0 +1,157 @@
+-- ==========================================================
+-- 📘 ESQUEMA BASE: Catálogos médicos y anatómicos
+-- ==========================================================
+
+CREATE DATABASE IF NOT EXISTS control_lesiones
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_general_ci;
+
+USE control_lesiones;
+
+-- ----------------------------------------------------------
+-- 1️⃣ Segmentos corporales
+-- ----------------------------------------------------------
+CREATE TABLE segmentos_corporales (
+  id_segmento INT AUTO_INCREMENT PRIMARY KEY,
+  nombre VARCHAR(50) NOT NULL UNIQUE,
+  descripcion TEXT DEFAULT NULL
+) ENGINE=InnoDB;
+
+-- ----------------------------------------------------------
+-- 2️⃣ Zonas por segmento
+-- ----------------------------------------------------------
+CREATE TABLE zonas_segmento (
+  id_zona INT AUTO_INCREMENT PRIMARY KEY,
+  nombre VARCHAR(50) NOT NULL,
+  id_segmento INT NOT NULL,
+  FOREIGN KEY (id_segmento) REFERENCES segmentos_corporales(id_segmento)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  UNIQUE (nombre, id_segmento)
+) ENGINE=InnoDB;
+
+-- ----------------------------------------------------------
+-- 3️⃣ Zonas anatómicas (subzonas)
+-- ----------------------------------------------------------
+CREATE TABLE zonas_anatomicas (
+  id_subzona INT AUTO_INCREMENT PRIMARY KEY,
+  nombre VARCHAR(80) NOT NULL,
+  id_zona INT NOT NULL,
+  FOREIGN KEY (id_zona) REFERENCES zonas_segmento(id_zona)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  UNIQUE (nombre, id_zona)
+) ENGINE=InnoDB;
+
+-- ----------------------------------------------------------
+-- 4️⃣ Tipos de lesión
+-- ----------------------------------------------------------
+CREATE TABLE tipos_lesion (
+  id_tipo INT AUTO_INCREMENT PRIMARY KEY,
+  categoria VARCHAR(60) NOT NULL,    -- Ej: "MUSCULAR", "ÓSEA"
+  nombre VARCHAR(80) NOT NULL,       -- Ej: "DISTENSIÓN", "FRACTURA"
+  UNIQUE (categoria, nombre)
+) ENGINE=InnoDB;
+
+-- ----------------------------------------------------------
+-- 5️⃣ Tratamientos
+-- ----------------------------------------------------------
+CREATE TABLE tratamientos (
+  id_tratamiento INT AUTO_INCREMENT PRIMARY KEY,
+  nombre VARCHAR(100) NOT NULL UNIQUE,
+  descripcion TEXT DEFAULT NULL
+) ENGINE=InnoDB;
+
+-- ----------------------------------------------------------
+-- 6️⃣ Mecanismos de lesión
+-- ----------------------------------------------------------
+CREATE TABLE mecanismos_lesion (
+  id_mecanismo INT AUTO_INCREMENT PRIMARY KEY,
+  nombre VARCHAR(100) NOT NULL UNIQUE
+) ENGINE=InnoDB;
+
+-- ----------------------------------------------------------
+-- 7️⃣ Lateralidades
+-- ----------------------------------------------------------
+CREATE TABLE lateralidades (
+  id_lateralidad INT AUTO_INCREMENT PRIMARY KEY,
+  nombre VARCHAR(20) NOT NULL UNIQUE
+) ENGINE=InnoDB;
+
+-- ----------------------------------------------------------
+-- 8️⃣ Lugares de lesión
+-- ----------------------------------------------------------
+CREATE TABLE lugares_lesion (
+  id_lugar INT AUTO_INCREMENT PRIMARY KEY,
+  nombre VARCHAR(50) NOT NULL UNIQUE
+) ENGINE=InnoDB;
+
+-- ----------------------------------------------------------
+-- 9️⃣ Gravedad (por días o clínica)
+-- ----------------------------------------------------------
+CREATE TABLE gravedad_lesion (
+  id_gravedad INT AUTO_INCREMENT PRIMARY KEY,
+  nombre VARCHAR(30) NOT NULL UNIQUE,    -- Ej: LEVE, MODERADA...
+  dias_min INT DEFAULT NULL,
+  dias_max INT DEFAULT NULL,
+  tipo VARCHAR(30) DEFAULT 'DÍAS DE BAJA'  -- o 'CLÍNICA'
+) ENGINE=InnoDB;
+
+-- ----------------------------------------------------------
+-- 🔟 Tipos de recidiva
+-- ----------------------------------------------------------
+CREATE TABLE tipos_recidiva (
+  id_recidiva INT AUTO_INCREMENT PRIMARY KEY,
+  nombre VARCHAR(30) NOT NULL UNIQUE
+) ENGINE=InnoDB;
+
+-- ----------------------------------------------------------
+-- 🩺 Tabla base de lesiones (ejemplo de integración futura)
+-- ----------------------------------------------------------
+CREATE TABLE lesiones (
+  id_lesion INT AUTO_INCREMENT PRIMARY KEY,
+  id_jugadora INT NOT NULL,
+  fecha DATE NOT NULL,
+  id_segmento INT DEFAULT NULL,
+  id_zona INT DEFAULT NULL,
+  id_subzona INT DEFAULT NULL,
+  id_tipo_lesion INT DEFAULT NULL,
+  id_mecanismo INT DEFAULT NULL,
+  id_lateralidad INT DEFAULT NULL,
+  id_tratamiento INT DEFAULT NULL,
+  id_gravedad INT DEFAULT NULL,
+  id_recidiva INT DEFAULT NULL,
+  observaciones TEXT DEFAULT NULL,
+  FOREIGN KEY (id_segmento) REFERENCES segmentos_corporales(id_segmento)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE,
+  FOREIGN KEY (id_zona) REFERENCES zonas_segmento(id_zona)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE,
+  FOREIGN KEY (id_subzona) REFERENCES zonas_anatomicas(id_subzona)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE,
+  FOREIGN KEY (id_tipo_lesion) REFERENCES tipos_lesion(id_tipo)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE,
+  FOREIGN KEY (id_mecanismo) REFERENCES mecanismos_lesion(id_mecanismo)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE,
+  FOREIGN KEY (id_lateralidad) REFERENCES lateralidades(id_lateralidad)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE,
+  FOREIGN KEY (id_tratamiento) REFERENCES tratamientos(id_tratamiento)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE,
+  FOREIGN KEY (id_gravedad) REFERENCES gravedad_lesion(id_gravedad)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE,
+  FOREIGN KEY (id_recidiva) REFERENCES tipos_recidiva(id_recidiva)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE,
+  INDEX idx_jugadora_fecha (id_jugadora, fecha)
+) ENGINE=InnoDB;
+
+-- ==========================================================
+-- ✅ Esquema completo creado correctamente
+-- ==========================================================

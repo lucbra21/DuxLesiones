@@ -1,0 +1,9 @@
+{
+  "tipo_lesion": [
+    { "id": 1, "nombre": "MUSCULAR" },
+    { "id": 2, "nombre": "ARTICULAR" },
+    { "id": 3, "nombre": "ÓSEA" },
+    { "id": 4, "nombre": "TEJIDOS SUPERFICIALES" },
+    { "id": 5, "nombre": "TENDINOSA" }
+  ]
+}

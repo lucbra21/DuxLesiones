@@ -1,0 +1,7 @@
+{
+  "mecanismos": [
+    { "id": 1, "nombre": "SIN CONTACTO" },
+    { "id": 2, "nombre": "CON CONTACTO" },
+    { "id": 3, "nombre": "SOBRECARGA / MICROTRAUMA REPETITIVO" }
+  ]
+}

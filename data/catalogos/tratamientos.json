@@ -1,0 +1,20 @@
+{
+  "tratamientos": [
+    { "id": 1, "nombre": "MASOTERAPIA", "categoria": "MANUAL", "fase": "SUBAGUDA" },
+    { "id": 2, "nombre": "DRENAJE LINFÁTICO", "categoria": "MANUAL", "fase": "SUBAGUDA" },
+    { "id": 3, "nombre": "ELECTRÓLISIS PERCUTÁNEA INTRATISULAR (EPI)", "categoria": "INVASIVA", "fase": "FUNCIONAL" },
+    { "id": 4, "nombre": "CRIOTERAPIA", "categoria": "FÍSICA", "fase": "AGUDA" },
+    { "id": 5, "nombre": "DIATERMIA", "categoria": "FÍSICA", "fase": "SUBAGUDA" },
+    { "id": 6, "nombre": "PUNCIÓN SECA", "categoria": "INVASIVA", "fase": "FUNCIONAL" },
+    { "id": 7, "nombre": "TERAPIA MANUAL", "categoria": "MANUAL", "fase": "SUBAGUDA" },
+    { "id": 8, "nombre": "MOVILIZACIÓN NEUROMENÍNGEA", "categoria": "MANUAL", "fase": "FUNCIONAL" },
+    { "id": 9, "nombre": "EJERCICIOS DE MOVILIZACIÓN ARTICULAR", "categoria": "EJERCICIO TERAPÉUTICO", "fase": "SUBAGUDA" },
+    { "id": 10, "nombre": "EJERCICIOS DE FUERZA", "categoria": "EJERCICIO TERAPÉUTICO", "fase": "FUNCIONAL" },
+    { "id": 11, "nombre": "ESTABILIZACIÓN LUMBO-PÉLVICA", "categoria": "EJERCICIO TERAPÉUTICO", "fase": "FUNCIONAL" },
+    { "id": 12, "nombre": "TRABAJO PROPIOCEPTIVO", "categoria": "EJERCICIO TERAPÉUTICO", "fase": "FUNCIONAL" },
+    { "id": 13, "nombre": "TRABAJO DE CAMPO / READAPTACIÓN", "categoria": "REEDUCACIÓN DEPORTIVA", "fase": "RETORNO" },
+    { "id": 14, "nombre": "GROUNDING", "categoria": "RECUPERACIÓN / MINDFULNESS", "fase": "RETORNO" },
+    { "id": 15, "nombre": "RESPIRACIONES / MEDITACIÓN", "categoria": "RECUPERACIÓN / MINDFULNESS", "fase": "RETORNO" },
+    { "id": 16, "nombre": "YOGA", "categoria": "RECUPERACIÓN / MINDFULNESS", "fase": "RETORNO" }
+  ]
+}

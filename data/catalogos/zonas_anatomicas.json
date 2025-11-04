@@ -1,0 +1,116 @@
+{
+  "zonas_anatomicas": [
+
+    { "id": 1, "nombre": "NARIZ", "zona_id": 1 },
+    { "id": 2, "nombre": "OJOS", "zona_id": 1 },
+    { "id": 3, "nombre": "BOCA", "zona_id": 1 },
+    { "id": 4, "nombre": "OREJAS", "zona_id": 1 },
+    { "id": 5, "nombre": "MANDÍBULA", "zona_id": 1 },
+    { "id": 6, "nombre": "FRENTE", "zona_id": 1 },
+
+    { "id": 7, "nombre": "CUERO CABELLUDO", "zona_id": 2 },
+    { "id": 8, "nombre": "FRONTAL", "zona_id": 2 },
+    { "id": 9, "nombre": "OCCIPITAL", "zona_id": 2 },
+    { "id": 10, "nombre": "PARIETAL", "zona_id": 2 },
+    { "id": 11, "nombre": "TEMPORAL", "zona_id": 2 },
+
+    { "id": 12, "nombre": "ECOM", "zona_id": 3 },
+    { "id": 13, "nombre": "TRAPECIOS", "zona_id": 3 },
+    { "id": 14, "nombre": "PARAVERTEBRALES CERVICALES", "zona_id": 3 },
+
+    { "id": 15, "nombre": "PARAVERTEBRALES DORSALES", "zona_id": 4 },
+    { "id": 16, "nombre": "VÉRTEBRAS DORSALES", "zona_id": 4 },
+    { "id": 17, "nombre": "DORSAL ANCHO", "zona_id": 4 },
+
+    { "id": 18, "nombre": "COSTILLAS", "zona_id": 5 },
+    { "id": 19, "nombre": "ESTERNÓN", "zona_id": 5 },
+    { "id": 20, "nombre": "ESTERNOCLAVICULAR", "zona_id": 5 },
+    { "id": 21, "nombre": "INTERCOSTALES", "zona_id": 5 },
+    { "id": 22, "nombre": "PECTORAL", "zona_id": 5 },
+
+    { "id": 23, "nombre": "VÉRTEBRAS LUMBARES", "zona_id": 6 },
+    { "id": 24, "nombre": "NERVIO CIÁTICO", "zona_id": 6 },
+    { "id": 25, "nombre": "CUADRADO LUMBAR", "zona_id": 6 },
+    { "id": 26, "nombre": "PARAVERTEBRALES LUMBARES", "zona_id": 6 },
+
+    { "id": 27, "nombre": "CRESTA ILÍACA", "zona_id": 7 },
+    { "id": 28, "nombre": "PUBIS", "zona_id": 7 },
+    { "id": 29, "nombre": "SACRO", "zona_id": 7 },
+    { "id": 30, "nombre": "GLÚTEOS", "zona_id": 7 },
+    { "id": 31, "nombre": "PIRAMIDAL", "zona_id": 7 },
+    { "id": 32, "nombre": "PSOAS ILÍACO", "zona_id": 7 },
+
+    { "id": 33, "nombre": "ACROMIOCLAVICULAR", "zona_id": 8 },
+    { "id": 34, "nombre": "CLAVÍCULA", "zona_id": 8 },
+    { "id": 35, "nombre": "ESCÁPULA", "zona_id": 8 },
+    { "id": 36, "nombre": "CABEZA HUMERAL", "zona_id": 8 },
+    { "id": 37, "nombre": "DELTOIDES", "zona_id": 8 },
+    { "id": 38, "nombre": "MANGUITO ROTADOR", "zona_id": 8 },
+    { "id": 39, "nombre": "PORCIÓN LARGA DEL BÍCEPS", "zona_id": 8 },
+
+    { "id": 40, "nombre": "HÚMERO", "zona_id": 9 },
+    { "id": 41, "nombre": "BÍCEPS", "zona_id": 9 },
+    { "id": 42, "nombre": "TRÍCEPS", "zona_id": 9 },
+
+    { "id": 43, "nombre": "EPICÓNDILO", "zona_id": 10 },
+    { "id": 44, "nombre": "EPITRÓCLEA", "zona_id": 10 },
+    { "id": 45, "nombre": "OLÉCRANON", "zona_id": 10 },
+
+    { "id": 46, "nombre": "RADIO", "zona_id": 11 },
+    { "id": 47, "nombre": "CÚBITO", "zona_id": 11 },
+    { "id": 48, "nombre": "FLEXORES", "zona_id": 11 },
+    { "id": 49, "nombre": "EXTENSORES", "zona_id": 11 },
+
+    { "id": 50, "nombre": "RADIO DISTAL", "zona_id": 12 },
+    { "id": 51, "nombre": "CÚBITO DISTAL", "zona_id": 12 },
+
+    { "id": 52, "nombre": "CARPO", "zona_id": 13 },
+    { "id": 53, "nombre": "METACARPO", "zona_id": 13 },
+
+    { "id": 54, "nombre": "PULGAR", "zona_id": 13 },
+    { "id": 55, "nombre": "ÍNDICE", "zona_id": 13 },
+    { "id": 56, "nombre": "MEDIO", "zona_id": 13 },
+    { "id": 57, "nombre": "ANULAR", "zona_id": 13 },
+    { "id": 58, "nombre": "MEÑIQUE", "zona_id": 13 },
+
+    { "id": 59, "nombre": "CABEZA DEL FÉMUR", "zona_id": 14 },
+    { "id": 60, "nombre": "RODETE GLENOIDEO", "zona_id": 14 },
+    { "id": 61, "nombre": "BURSA TROCANTÉREA", "zona_id": 14 },
+    { "id": 62, "nombre": "ADUCTORES", "zona_id": 14 },
+    { "id": 63, "nombre": "ABDUCTORES", "zona_id": 14 },
+
+    { "id": 64, "nombre": "FÉMUR", "zona_id": 15 },
+    { "id": 65, "nombre": "CUÁDRICEPS", "zona_id": 15 },
+    { "id": 66, "nombre": "ISQUIOTIBIALES", "zona_id": 15 },
+
+    { "id": 67, "nombre": "RÓTULA", "zona_id": 16 },
+    { "id": 68, "nombre": "MENISCO INTERNO", "zona_id": 16 },
+    { "id": 69, "nombre": "MENISCO EXTERNO", "zona_id": 16 },
+    { "id": 70, "nombre": "LLE", "zona_id": 16 },
+    { "id": 71, "nombre": "LLI", "zona_id": 16 },
+    { "id": 72, "nombre": "LCA", "zona_id": 16 },
+    { "id": 73, "nombre": "LCP", "zona_id": 16 },
+    { "id": 74, "nombre": "TENDÓN ROTULIANO", "zona_id": 16 },
+
+    { "id": 75, "nombre": "TIBIA", "zona_id": 17 },
+    { "id": 76, "nombre": "PERONÉ", "zona_id": 17 },
+    { "id": 77, "nombre": "GEMELOS", "zona_id": 17 },
+    { "id": 78, "nombre": "SÓLEO", "zona_id": 17 },
+    { "id": 79, "nombre": "TIBIAL ANTERIOR", "zona_id": 17 },
+
+    { "id": 80, "nombre": "LIG PERONEO ASTRAGALINO ANTERIOR", "zona_id": 18 },
+    { "id": 81, "nombre": "TENDÓN DE AQUILES", "zona_id": 18 },
+
+    { "id": 82, "nombre": "TARSO", "zona_id": 19 },
+    { "id": 83, "nombre": "METATARSO", "zona_id": 19 },
+    { "id": 84, "nombre": "FASCIA PLANTAR", "zona_id": 19 },
+
+    { "id": 85, "nombre": "1° DEDO (GORDO)", "zona_id": 19 },
+    { "id": 86, "nombre": "2° DEDO", "zona_id": 19 },
+    { "id": 87, "nombre": "3° DEDO", "zona_id": 19 },
+    { "id": 88, "nombre": "4° DEDO", "zona_id": 19 },
+    { "id": 89, "nombre": "5° DEDO (MEÑIQUE)", "zona_id": 19 },
+
+    { "id": 999, "nombre": "ZONA NO ESPECIFICADA", "zona_id": null }
+  ]
+}
