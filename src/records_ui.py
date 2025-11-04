@@ -3,8 +3,6 @@ import streamlit as st
 import datetime
 from src.io_files import load_catalog_list
 import pandas as pd
-
-import pandas as pd
 import numpy as np
 import json
 
