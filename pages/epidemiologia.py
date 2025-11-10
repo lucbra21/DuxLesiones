@@ -4,13 +4,14 @@ import plotly.express as px
 import src.config as config
 config.init_config()
 
-from src.auth import init_app_state, login_view, menu, validate_login
+from src.auth_system.auth_core import init_app_state, validate_login
+from src.auth_system.auth_ui import login_view, menu
+
 from src.ui_components import data_filters_advanced, groupal_metrics
-from src.io_files import get_records_plus_players_df
+from src.db_records import get_records_plus_players_db
 from src.util import clean_df
 
 init_app_state()
-
 validate_login()
 
 # Authentication gate
@@ -113,7 +114,7 @@ with graficos:
         st.plotly_chart(fig_tiempo)
 
 with tablas:
-    records = get_records_plus_players_df()
+    records = get_records_plus_players_db()
     records_clean = clean_df(records)
     records_filtrados = records_clean[records_clean["id_lesion"].isin(df_filtrado["id_lesion"])]
     st.dataframe(records_filtrados)

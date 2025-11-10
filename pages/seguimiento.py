@@ -7,8 +7,10 @@ config.init_config()
 from src.records_ui import view_registro_lesion
 from src.db_records import save_lesion
 from src.ui_components import data_filters
-from src.auth import init_app_state, login_view, menu, validate_login
 from src.util import clean_df, sanitize_lesion_data
+
+from src.auth_system.auth_core import init_app_state, validate_login
+from src.auth_system.auth_ui import login_view, menu
 
 init_app_state()
 validate_login()

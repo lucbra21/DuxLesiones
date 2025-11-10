@@ -1,11 +1,12 @@
 import streamlit as st
+import datetime
 import src.config as config
 config.init_config()
 
-from src.auth import init_app_state, login_view, menu, validate_login
-from src.ui_components import data_filters, player_block_dux
+from src.auth_system.auth_core import init_app_state, validate_login
+from src.auth_system.auth_ui import login_view, menu
 
-import datetime
+from src.ui_components import data_filters, player_block_dux
 
 # --- Inicialización y autenticación ---
 init_app_state()
