@@ -1,4 +1,3 @@
-import time
 import streamlit as st
 import datetime
 from src.io_files import load_catalog_list

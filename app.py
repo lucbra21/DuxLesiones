@@ -4,7 +4,9 @@ import pandas as pd
 import src.config as config
 config.init_config()
 
-from src.auth import init_app_state, login_view, menu, validate_login
+from src.auth_system.auth_core import init_app_state, validate_login
+from src.auth_system.auth_ui import login_view, menu
+
 from src.util import clean_df
 from src.ui_components import main_metrics
 from src.db_records import get_records_plus_players_db
