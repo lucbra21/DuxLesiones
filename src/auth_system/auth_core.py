@@ -96,9 +96,23 @@ def logout():
 def validate_login():
     return bool(get_current_user())
 
-def validate_password(password, user):
+def validate_access(password, user):
+    
     """Valida la contraseña y genera token + cookie única por usuario."""
     if bcrypt.checkpw(password.encode("utf-8"), user["password_hash"].encode("utf-8")):
+
+        # ---- VALIDAR PERMISO DE ACCESO A LA APP ----
+        permisos = user.get("permissions", "")
+
+        # Normalizamos a lista por si viene como string concatenado
+        permisos_list = [p.strip() for p in permisos.split(",")] if isinstance(permisos, str) else []
+
+        if auth_config.APP_NAME not in permisos_list:
+            print(f"Acceso denegado: el usuario no tiene permiso para usar la aplicación. {auth_config.APP_NAME}")
+            st.error(f":material/block: Acceso denegado. No tienes permiso para usar esta aplicación.")
+            st.stop()
+
+        # --------------------------------------------
         token = create_jwt_token(user["email"], user["role_name"])
         token = _ensure_str(token)
 
