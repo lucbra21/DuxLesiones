@@ -155,7 +155,7 @@ def load_lesiones_db(as_df=True):
         SELECT 
             l.id,
             l.id_lesion,
-            l.id_jugadora,
+            l.id_jugadora AS id_jugadora,
             l.posicion,
             l.fecha_lesion,
             lu.nombre AS lugar,
@@ -274,7 +274,7 @@ def get_records_plus_players_db(plantel: str = None) -> pd.DataFrame:
         SELECT 
             l.id AS id_registro,
             l.id_lesion,
-            l.id_jugadora,
+            l.id_jugadora AS id_jugadora,
             f.nombre,
             f.apellido,
             f.competicion AS plantel,
@@ -309,8 +309,8 @@ def get_records_plus_players_db(plantel: str = None) -> pd.DataFrame:
             l.fecha_hora_registro,
             l.usuario
         FROM lesiones l
-        LEFT JOIN futbolistas f ON l.id_jugadora = f.id
-        LEFT JOIN informacion_futbolistas i ON l.id_jugadora = i.id_futbolista
+        LEFT JOIN futbolistas f ON l.id_jugadora = f.identificacion
+        LEFT JOIN informacion_futbolistas i ON l.id_jugadora = i.identificacion
         LEFT JOIN lugares lu ON l.lugar_id = lu.id
         LEFT JOIN mecanismos m ON l.mecanismo_id = m.id
         LEFT JOIN tipo_lesion t ON l.tipo_lesion_id = t.id
@@ -366,7 +366,7 @@ def get_records_plus_players_db(plantel: str = None) -> pd.DataFrame:
     finally:
         conn.close()
 
-@st.cache_data(ttl=3600)  # cachea por 1 hora (ajústalo según tu frecuencia de actualización)
+#@st.cache_data(ttl=3600)  # cachea por 1 hora (ajústalo según tu frecuencia de actualización)
 def load_jugadoras_db() -> tuple[pd.DataFrame | None, str | None]:
     """
     Carga jugadoras desde la base de datos (futbolistas + informacion_futbolistas).
@@ -376,17 +376,18 @@ def load_jugadoras_db() -> tuple[pd.DataFrame | None, str | None]:
     """
     conn = get_connection()
     if not conn:
+        print("No se pudo conectar a la base de datos.")
         return None, ":material/warning: No se pudo conectar a la base de datos."
 
     try:
         query = """
         SELECT 
-            f.id AS identificacion,
+            f.identificacion,
             f.nombre,
             f.apellido,
             f.competicion AS plantel,
             f.fecha_nacimiento,
-            f.sexo,
+            f.genero,
             i.posicion,
             i.dorsal,
             i.nacionalidad,
@@ -395,7 +396,7 @@ def load_jugadoras_db() -> tuple[pd.DataFrame | None, str | None]:
             i.foto_url
         FROM futbolistas f
         LEFT JOIN informacion_futbolistas i 
-            ON f.id = i.id_futbolista
+            ON f.identificacion = i.identificacion
         ORDER BY f.nombre ASC;
         """
 
@@ -416,7 +417,7 @@ def load_jugadoras_db() -> tuple[pd.DataFrame | None, str | None]:
         orden = [
             "identificacion", "nombre_jugadora", "nombre", "apellido", "posicion", "plantel",
             "dorsal", "nacionalidad", "altura", "peso", "fecha_nacimiento",
-            "sexo", "foto_url"
+            "genero", "foto_url"
         ]
         df = df[[col for col in orden if col in df.columns]]
         df["posicion"] = df["posicion"].map(MAP_POSICIONES).fillna(df["posicion"])
@@ -426,9 +427,11 @@ def load_jugadoras_db() -> tuple[pd.DataFrame | None, str | None]:
         return df, None
 
     except Exception as e:
+        print(f"Error al cargar jugadoras: {e}")
         return None, f":material/warning: Error al cargar jugadoras: {e}"
 
     finally:
+        #print("Cerrando conexión a la base de datos.")
         conn.close()
 
 @st.cache_data(ttl=3600)  # cachea por 1 hora

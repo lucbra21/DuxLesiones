@@ -12,9 +12,14 @@ from src.db_records import load_jugadoras_db, load_competiciones_db, load_lesion
 from src.schema import MAP_POSICIONES
 
 def data_filters(modo: int = 1):
-    jug_df, jug_error = load_jugadoras_db()    
+    jug_df, jug_error = load_jugadoras_db()   
+
+    if jug_error:
+        st.error(f"❌ {jug_error}")
+        st.stop()
+
     comp_df, comp_error = load_competiciones_db()
-    
+   
     if modo == 1:
         col1, col2, col3 = st.columns([2,1,2])
     else:
@@ -301,7 +306,7 @@ def player_block_dux(jugadora_seleccionada: dict, unavailable="N/A"):
     posicion = jugadora_seleccionada.get("posicion", unavailable)
     pais = jugadora_seleccionada.get("nacionalidad", unavailable)
     fecha_nac = jugadora_seleccionada.get("fecha_nacimiento", unavailable)
-    sexo = jugadora_seleccionada.get("sexo", "")
+    genero = jugadora_seleccionada.get("genero", "")
     competicion = jugadora_seleccionada.get("plantel", "")
     dorsal = jugadora_seleccionada.get("dorsal", "")
     url_drive = jugadora_seleccionada.get("foto_url", "")
@@ -312,13 +317,13 @@ def player_block_dux(jugadora_seleccionada: dict, unavailable="N/A"):
     edad_texto, fnac = calcular_edad(fecha_nac)
 
     # Color temático
-    #color = "violet" if sexo.upper() == "F" else "blue"
+    #color = "violet" if genero.upper() == "F" else "blue"
 
     # Icono de género
-    if sexo.upper() == "F":
+    if genero.upper() == "F":
         genero_icono = ":material/girl:"
         profile_image = "female"
-    elif sexo.upper() == "H":
+    elif genero.upper() == "H":
         genero_icono = ":material/boy:"
         profile_image = "male"
     else:
