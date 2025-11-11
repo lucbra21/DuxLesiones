@@ -366,7 +366,7 @@ def get_records_plus_players_db(plantel: str = None) -> pd.DataFrame:
     finally:
         conn.close()
 
-#@st.cache_data(ttl=3600)  # cachea por 1 hora (ajústalo según tu frecuencia de actualización)
+@st.cache_data(ttl=3600)  # cachea por 1 hora (ajústalo según tu frecuencia de actualización)
 def load_jugadoras_db() -> tuple[pd.DataFrame | None, str | None]:
     """
     Carga jugadoras desde la base de datos (futbolistas + informacion_futbolistas).
