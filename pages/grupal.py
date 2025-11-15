@@ -7,7 +7,8 @@ config.init_config()
 from src.auth_system.auth_core import init_app_state, validate_login
 from src.auth_system.auth_ui import login_view, menu
 
-from src.ui_components import data_filters_advanced, groupal_metrics
+from src.ui_components import data_filters_advanced
+from src.reports.ui_grupal import groupal_metrics
 from src.db_records import get_records_plus_players_db
 from src.util import clean_df
 
