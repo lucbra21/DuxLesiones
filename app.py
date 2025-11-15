@@ -1,5 +1,5 @@
 import streamlit as st
-import pandas as pd
+from src.i18n.i18n import t
 
 import src.config as config
 config.init_config()
@@ -16,17 +16,15 @@ validate_login()
 
 # Authentication gate
 if not st.session_state["auth"]["is_logged_in"]:
-    #st.text("🔐 Por favor, inicie sesión para acceder a esta página.")
     login_view()
     st.stop()
-
-st.header("Resumen de :red[Lesiones] (1er Equipo)", divider=True)
-
 menu()
+
+st.header(t("Resumen de :red[Lesiones] (1er Equipo)"), divider=True)
 
 records = get_records_plus_players_db(plantel="1FF")
 resumen = main_metrics(records)
 
-st.subheader("Ultimas :red[lesiones]")
+st.subheader(t("Ultimas :red[lesiones]"))
 df_filtrado = clean_df(resumen)
 st.dataframe(df_filtrado)

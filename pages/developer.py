@@ -14,13 +14,12 @@ validate_login()
 if not st.session_state["auth"]["is_logged_in"]:
     login_view()
     st.stop()
+menu()
 
 if st.session_state["auth"]["rol"].lower() != "developer":
     st.switch_page("app.py")
 
 st.header("Area de:red[Desarrollo]", divider=True)
-
-menu()
 
 usuarios, simulador, bd = st.tabs(["USUARIOS", "SIMULADOR", "BASE DE DATOS"])
 with usuarios:

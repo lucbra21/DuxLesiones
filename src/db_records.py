@@ -393,7 +393,8 @@ def load_jugadoras_db() -> tuple[pd.DataFrame | None, str | None]:
             i.nacionalidad,
             i.altura,
             i.peso,
-            i.foto_url
+            i.foto_url,
+            i.foto_url_drive
         FROM futbolistas f
         LEFT JOIN informacion_futbolistas i 
             ON f.identificacion = i.identificacion
@@ -493,7 +494,7 @@ def delete_lesiones(ids: list[int]) -> tuple[bool, str]:
     """
     if not ids:
         return False, "No se proporcionaron IDs de lesiones."
-
+    
     try:
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
@@ -506,8 +507,9 @@ def delete_lesiones(ids: list[int]) -> tuple[bool, str]:
         cursor.close()
         conn.close()
 
-        return True, f"✅ Se eliminaron {cursor.rowcount} registro(s) correctamente."
+        return True, f"Se eliminaron {cursor.rowcount} registro(s) correctamente."
 
     except Exception as e:
+        print(f"Error al eliminar lesiones: {e}")
         st.error(f":material/warning: Error al eliminar lesiones: {e}")
         return False, f":material/warning: Error al eliminar lesiones: {e}"
