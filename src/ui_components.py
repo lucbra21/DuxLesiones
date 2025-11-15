@@ -7,17 +7,13 @@ import pandas as pd
 import json
 
 from src.db_records import load_jugadoras_db, load_competiciones_db, load_lesiones_db
-#from src.schema import MAP_POSICIONES
+from src.schema import MAP_POSICIONES
+
+def load_posiciones_traducidas() -> dict:
+    return {key: t(valor_es) for key, valor_es in MAP_POSICIONES.items()}
 
 def selection_header(modo: int = 1):
     ALL_TEXT = t("Todas")
-
-    MAP_POSICIONES = {
-        "POR": t("Portera"),
-        "DEF": t("Defensa"),
-        "MC": t("Centro"),
-        "DEL": t("Delantera")
-    }
 
     jug_df, jug_error = load_jugadoras_db()   
 
@@ -48,13 +44,19 @@ def selection_header(modo: int = 1):
         )
         
     with col2:
-        posicion = st.selectbox(
+        MAP_POSICIONES_TRADUCIDAS = load_posiciones_traducidas()
+        MAP_POSICIONES_INVERTIDO = {v: k for k, v in MAP_POSICIONES_TRADUCIDAS.items()}
+
+        posicion_traducida = st.selectbox(
             t("Posición"),
-            options=list(MAP_POSICIONES.values()),
+            options=list(MAP_POSICIONES_TRADUCIDAS.values()),
             placeholder=t("Seleccione una Posición"),
             index=None
         )
         
+        clave = MAP_POSICIONES_INVERTIDO.get(posicion_traducida)
+        posicion = MAP_POSICIONES.get(clave)
+        #st.text(f"Clave interna: {posicion}")
     with col3:
         if competicion:
             codigo_competicion = competicion["codigo"]
@@ -128,12 +130,6 @@ def selection_header(modo: int = 1):
 def data_filters_advanced():
     ALL_TEXT = t("Todas")
 
-    MAP_POSICIONES = {
-        "POR": t("Portera"),
-        "DEF": t("Defensa"),
-        "MC": t("Centro"),
-        "DEL": t("Delantera")
-    }
     # --- Cargar datos ---
     jug_df, jug_error = load_jugadoras_db()
 
@@ -153,7 +149,7 @@ def data_filters_advanced():
         st.warning(t("No hay datos disponibles para aplicar filtros."))
         return None, None, None, (None, None)
 
-    col1, col2, col3, col4 = st.columns([3, 1, 1.5, 2])
+    col1, col2, col3, col4 = st.columns([3, 1.5, 1.5, 2])
 
     # --- FILTRO 1: Plantel / Competición ---
     with col1:
@@ -168,13 +164,23 @@ def data_filters_advanced():
 
     # --- FILTRO 2: Posición ---
     with col2:
-        posicion = st.selectbox(
-            t("Posición"),
-            options=[ALL_TEXT] + list(MAP_POSICIONES.values()),
-            placeholder=t("Seleccione una Posición"),
-            index=0
-        )
+        MAP_POSICIONES_TRADUCIDAS = load_posiciones_traducidas()
+        MAP_POSICIONES_INVERTIDO = {v: k for k, v in MAP_POSICIONES_TRADUCIDAS.items()}
 
+        posicion_traducida = st.selectbox(
+            t("Posición"),
+            options=[ALL_TEXT] + list(MAP_POSICIONES_TRADUCIDAS.values()),
+            placeholder=t("Seleccione una Posición"),
+            index=None
+        )
+        
+        if posicion_traducida == ALL_TEXT:
+            posicion = ALL_TEXT
+        else:
+            clave = MAP_POSICIONES_INVERTIDO.get(posicion_traducida)
+            posicion = MAP_POSICIONES.get(clave)
+        
+        #st.text(f"Clave interna: {posicion}")
     # --- FILTRO 3: Tipo de lesión (dependiente de jugadoras filtradas) ---
     with col3:
         # Filtrar jugadoras por competición y posición
