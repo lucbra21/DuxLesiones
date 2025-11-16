@@ -1,13 +1,14 @@
 import streamlit as st
 import plotly.express as px
-
+from src.i18n.i18n import t
 import src.config as config
 config.init_config()
 
 from src.auth_system.auth_core import init_app_state, validate_login
 from src.auth_system.auth_ui import login_view, menu
 
-from src.ui_components import data_filters_advanced, groupal_metrics
+from src.ui_components import data_filters_advanced
+from src.reports.ui_grupal import groupal_metrics
 from src.db_records import get_records_plus_players_db
 from src.util import clean_df
 
@@ -19,10 +20,9 @@ if not st.session_state["auth"]["is_logged_in"]:
     #st.text("🔐 Por favor, inicie sesión para acceder a esta página.")
     login_view()
     st.stop()
-
-st.header("Análisis :red[epidemiológico]", divider=True)
-
 menu()
+
+st.header(t("Análisis :red[grupal]"), divider=True)
 
 competicion, posicion, tipo_lesion, fechas, df_filtrado = data_filters_advanced()
 
@@ -35,7 +35,7 @@ if df_filtrado.empty:
 
 groupal_metrics(df_filtrado)
 
-graficos, tablas = st.tabs(["GRAFICOS", "REGISTROS"])
+graficos, tablas = st.tabs([t("Graficos"), t("Registros")])
 
 with graficos:
     # ----------------- GRAFICOS -----------------
@@ -56,7 +56,7 @@ with graficos:
             conteo_tipo,
             names='Tipo de Lesión',
             values='Total',
-            title='Distribución por Tipo de Lesión',
+            title=t('Distribución por Tipo de Lesión'),
             color_discrete_sequence=px.colors.qualitative.Pastel
         )
         fig_tipo.update_traces(textinfo='percent+label')
@@ -72,11 +72,10 @@ with graficos:
             x='Lugar',
             y='Total',
             color='Lugar',
-            title='Lesiones por Lugar de Ocurrencia'
+            title=t('Lesiones por Lugar de Ocurrencia')
         )
-        fig_lugar.update_layout(xaxis_title="", yaxis_title="Número de Lesiones")
+        fig_lugar.update_layout(xaxis_title="", yaxis_title=t("Número de Lesiones"))
         st.plotly_chart(fig_lugar)
-
 
     # --- GRÁFICOS EN COLUMNA DERECHA ---
     with col_right:
@@ -93,9 +92,9 @@ with graficos:
             orientation='h', # Horizontal
             color='Total',
             color_continuous_scale=px.colors.sequential.Sunset,
-            title='Concentración por Zona del Cuerpo'
+            title=t('Concentración por Zona del Cuerpo')
         )
-        fig_zona.update_layout(xaxis_title="Número de Lesiones", yaxis_title="")
+        fig_zona.update_layout(xaxis_title=t("Número de Lesiones"), yaxis_title="")
         st.plotly_chart(fig_zona)
 
         #st.subheader("4. Tiempo de Baja por Tipo de Lesión")
@@ -108,9 +107,9 @@ with graficos:
             x='Tipo de Lesión',
             y='Promedio Días de Baja',
             color='Promedio Días de Baja',
-            title='Tiempo de Baja por Tipo de Lesión'
+            title=t('Tiempo de Baja por Tipo de Lesión')
         )
-        fig_tiempo.update_layout(yaxis_title="Días de Baja (Estimado)")
+        fig_tiempo.update_layout(yaxis_title=t("Días de Baja (Estimado)"))
         st.plotly_chart(fig_tiempo)
 
 with tablas:

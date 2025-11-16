@@ -2,47 +2,61 @@ import streamlit as st
 import datetime
 import pandas as pd
 
-import math
+from src.i18n.i18n import t
 import pandas as pd
-import numpy as np
 import json
 
-from src.util import (get_photo, clean_image_url, calcular_edad)
 from src.db_records import load_jugadoras_db, load_competiciones_db, load_lesiones_db
 from src.schema import MAP_POSICIONES
 
-def data_filters(modo: int = 1):
-    jug_df, jug_error = load_jugadoras_db()    
+def load_posiciones_traducidas() -> dict:
+    return {key: t(valor_es) for key, valor_es in MAP_POSICIONES.items()}
+
+def selection_header(modo: int = 1):
+    ALL_TEXT = t("Todas")
+
+    jug_df, jug_error = load_jugadoras_db()   
+
+    if jug_error:
+        st.error(f"{jug_error}")
+        st.stop()
+
     comp_df, comp_error = load_competiciones_db()
-    
+   
     if modo == 1:
         col1, col2, col3 = st.columns([2,1,2])
     else:
         records = load_lesiones_db() 
 
         if records.empty:    
-            st.warning("No hay datos de lesiones disponibles.")
+            st.warning(t("No hay datos de lesiones disponibles."))
             st.stop()   
-        col1, col2, col3, col4 = st.columns([2,1,2,1])
+        col1, col2, col3, col4 = st.columns([2,1.3,2,1])
 
     with col1:
         competiciones_options = comp_df.to_dict("records")
         competicion = st.selectbox(
-            "Plantel",
+            t("Plantel"),
             options=competiciones_options,
             format_func=lambda x: f'{x["nombre"]} ({x["codigo"]})',
-            placeholder="Seleccione un plantel",
+            placeholder=t("Seleccione un plantel"),
             index=3,
         )
         
     with col2:
-        posicion = st.selectbox(
-            "Posición",
-            options=list(MAP_POSICIONES.values()),
-            placeholder="Seleccione una Posición",
+        MAP_POSICIONES_TRADUCIDAS = load_posiciones_traducidas()
+        MAP_POSICIONES_INVERTIDO = {v: k for k, v in MAP_POSICIONES_TRADUCIDAS.items()}
+
+        posicion_traducida = st.selectbox(
+            t("Posición"),
+            options=list(MAP_POSICIONES_TRADUCIDAS.values()),
+            placeholder=t("Seleccione una Posición"),
             index=None
         )
         
+        clave = MAP_POSICIONES_INVERTIDO.get(posicion_traducida)
+        posicion = MAP_POSICIONES.get(clave)
+        #st.text(f"Clave interna: {posicion}")
     with col3:
         if competicion:
             codigo_competicion = competicion["codigo"]
@@ -56,10 +70,10 @@ def data_filters(modo: int = 1):
         jugadoras_filtradas = jug_df_filtrado.to_dict("records")
 
         jugadora_seleccionada = st.selectbox(
-            "Jugadora",
+            t("Jugadora"),
             options=jugadoras_filtradas,
             format_func=lambda x: f'{jugadoras_filtradas.index(x) + 1} - {x["nombre"]} {x["apellido"]}',
-            placeholder="Seleccione una Jugadora",
+            placeholder=t("Seleccione una Jugadora"),
             index=None
         )
 
@@ -82,19 +96,19 @@ def data_filters(modo: int = 1):
             # Verificar si hay registros
             if records.empty:
                 selected_tipo = st.selectbox(
-                "Tipo de lesión",
-                ["NO APLICA"],
+                t("Tipo de lesión"),
+                [t("NO APLICA")],
                 disabled=True)
             else:
                 # Mostrar filtro activo si hay registros
                 tipos = sorted(records["tipo_lesion"].dropna().unique())
                 selected_tipo = st.selectbox(
-                    "Tipo de lesión",
-                    ["Todas"] + tipos,
+                    t("Tipo de lesión"),
+                    [ALL_TEXT] + tipos,
                     disabled=False
                 )
 
-                if selected_tipo and selected_tipo != "Todas":
+                if selected_tipo and selected_tipo != ALL_TEXT:
                     records = records[records["tipo_lesion"] == selected_tipo]
 
    
@@ -114,47 +128,59 @@ def data_filters(modo: int = 1):
         return jugadora_seleccionada, posicion, records
 
 def data_filters_advanced():
+    ALL_TEXT = t("Todas")
+
     # --- Cargar datos ---
     jug_df, jug_error = load_jugadoras_db()
 
     if jug_df is None or "plantel" not in jug_df.columns:
-        st.error("❌ No se pudo cargar la lista de jugadoras o falta la columna 'plantel'.")
+        st.error(t("No se pudo cargar la lista de jugadoras o falta la columna 'plantel'."))
         st.stop()
     
     comp_df, comp_error = load_competiciones_db()
     records = load_lesiones_db()
 
     if records.empty:    
-        st.warning("No hay datos de lesiones disponibles.")
+        st.warning(t("No hay datos de lesiones disponibles."))
         st.stop()   
 
     # --- Validación básica ---
     if jug_df is None or jug_df.empty or records is None or records.empty:
-        st.warning("No hay datos disponibles para aplicar filtros.")
+        st.warning(t("No hay datos disponibles para aplicar filtros."))
         return None, None, None, (None, None)
 
-    col1, col2, col3, col4 = st.columns([3, 1, 1.5, 2])
+    col1, col2, col3, col4 = st.columns([3, 1.5, 1.5, 2])
 
     # --- FILTRO 1: Plantel / Competición ---
     with col1:
         competiciones_options = comp_df.to_dict("records") if comp_df is not None else []
         competicion = st.selectbox(
-            "Plantel",
+            t("Plantel"),
             options=competiciones_options,
             format_func=lambda x: f'{x["nombre"]} ({x["codigo"]})',
-            placeholder="Seleccione un plantel",
+            placeholder=t("Seleccione un plantel"),
             index=3
         )
 
     # --- FILTRO 2: Posición ---
     with col2:
-        posicion = st.selectbox(
-            "Posición",
-            ["Todas", "PORTERA", "DEFENSA", "CENTRO", "DELANTERA"],
-            placeholder="Seleccione una Posición",
-            index=0
-        )
+        MAP_POSICIONES_TRADUCIDAS = load_posiciones_traducidas()
+        MAP_POSICIONES_INVERTIDO = {v: k for k, v in MAP_POSICIONES_TRADUCIDAS.items()}
 
+        posicion_traducida = st.selectbox(
+            t("Posición"),
+            options=[ALL_TEXT] + list(MAP_POSICIONES_TRADUCIDAS.values()),
+            placeholder=t("Seleccione una Posición"),
+            index=None
+        )
+        
+        if posicion_traducida == ALL_TEXT:
+            posicion = ALL_TEXT
+        else:
+            clave = MAP_POSICIONES_INVERTIDO.get(posicion_traducida)
+            posicion = MAP_POSICIONES.get(clave)
+        
+        #st.text(f"Clave interna: {posicion}")
     # --- FILTRO 3: Tipo de lesión (dependiente de jugadoras filtradas) ---
     with col3:
         # Filtrar jugadoras por competición y posición
@@ -166,7 +192,7 @@ def data_filters_advanced():
                 jugadoras_filtradas["plantel"] == codigo_competicion
             ]
 
-        if posicion and posicion != "Todas":
+        if posicion and posicion != ALL_TEXT:
             jugadoras_filtradas = jugadoras_filtradas[
                 jugadoras_filtradas["posicion"] == posicion
             ]
@@ -181,10 +207,10 @@ def data_filters_advanced():
 
         # Obtener solo los tipos de lesión que existen en el conjunto filtrado
         tipos = sorted(records_filtrados["tipo_lesion"].dropna().unique().tolist())
-        tipo_lesion = st.selectbox("Tipo de lesión", ["Todas"] + tipos)
+        tipo_lesion = st.selectbox("Tipo de lesión", [ALL_TEXT] + tipos)
 
         # Aplicar el filtro de tipo de lesión
-        if tipo_lesion != "Todas":
+        if tipo_lesion != ALL_TEXT:
             records_filtrados = records_filtrados[
                 records_filtrados["tipo_lesion"] == tipo_lesion
             ]
@@ -214,7 +240,7 @@ def data_filters_advanced():
         default_value = (min_date, max_date)
 
         fecha_inicio, fecha_fin = st.date_input(
-            "Seleccionar rango",
+            t("Seleccionar rango"),
             value=(min_date, max_date) if min_date and max_date else (None, None),
             min_value=min_date,
             max_value=max_date,
@@ -230,7 +256,6 @@ def data_filters_advanced():
     # --- Resultado final ---
     return competicion, posicion, tipo_lesion, (fecha_inicio, fecha_fin), records_filtrados
 
-
 def preview_record(record: dict) -> None:
     #st.subheader("Previsualización")
     # Header with key fields
@@ -239,127 +264,8 @@ def preview_record(record: dict) -> None:
     posicion = record.get("posicion", "-")
     tipo = record.get("tipo_lesion", "-")
     #st.markdown(f"**Jugadora:** {jug}  |  **Fecha:** {fecha}  |  **Posicion:** {posicion}  |  **Tipo Lesión:** {tipo}")
-    with st.expander("Ver registro JSON", expanded=False):
+    with st.expander(t("Ver registro JSON"), expanded=False):
         st.code(json.dumps(record, ensure_ascii=False, indent=2), language="json")
-
-def groupal_metrics(df_filtrado):
-
-    # --- PASO 1: CÁLCULOS BASE ---
-    total_lesiones = len(df_filtrado)
-    activas = df_filtrado[df_filtrado["estado_lesion"] == "ACTIVO"].shape[0] if "estado_lesion" in df_filtrado else 0
-    porcentaje_activas = round((activas / total_lesiones) * 100, 1) if total_lesiones > 0 else 0
-    tiempo_promedio = round(df_filtrado["dias_baja_estimado"].mean(), 1) if "dias_baja_estimado" in df_filtrado else 0
-
-    # --- ZONA CORPORAL MÁS AFECTADA ---
-    if "zona_cuerpo" in df_filtrado.columns and not df_filtrado["zona_cuerpo"].dropna().empty:
-        zona_top = df_filtrado["zona_cuerpo"].mode()[0]
-        zona_count = df_filtrado["zona_cuerpo"].value_counts().iloc[0]
-        zona_pct = round((zona_count / total_lesiones) * 100, 1)
-    else:
-        zona_top, zona_count, zona_pct = "N/A", 0, 0
-
-    # --- TIPO DE LESIÓN MÁS FRECUENTE ---
-    if "tipo_lesion" in df_filtrado.columns and not df_filtrado["tipo_lesion"].dropna().empty:
-        tipo_top = df_filtrado["tipo_lesion"].mode()[0]
-        tipo_count = df_filtrado["tipo_lesion"].value_counts().iloc[0]
-        tipo_pct = round((tipo_count / total_lesiones) * 100, 1)
-    else:
-        tipo_top, tipo_count, tipo_pct = "N/A", 0, 0
-
-    # --- PORCENTAJE DE RECAÍDAS ---
-    if "es_recidiva" in df_filtrado.columns:
-        recidivas = df_filtrado[df_filtrado["es_recidiva"] == True].shape[0]
-        pct_recidivas = round((recidivas / total_lesiones) * 100, 1) if total_lesiones > 0 else 0
-    else:
-        recidivas, pct_recidivas = 0, 0
-
-    # ==================== PASO 3: INTERFAZ ====================
-    col1, col2, col3, col4 = st.columns(4, border=True)
-    with col1:
-        st.metric("Total de Lesiones", total_lesiones)
-    with col2:
-        st.metric("Lesiones Activas", activas, f"{porcentaje_activas}%")
-    with col3:
-        st.metric("Días de Baja Promedio", f"{tiempo_promedio:.1f} días")
-    with col4:
-        st.metric("Recaídas", recidivas, f"{pct_recidivas}%")
-
-def player_block_dux(jugadora_seleccionada: dict, unavailable="N/A"):
-    """Muestra el bloque visual con la información principal de la jugadora."""
-
-    # Validar jugadora seleccionada
-    if not jugadora_seleccionada or not isinstance(jugadora_seleccionada, dict):
-        st.info("Selecciona una jugadora para continuar.")
-        st.stop()
-    
-    #st.dataframe(jugadora_seleccionada)
-    # Extraer información básica
-    nombre = jugadora_seleccionada.get("nombre", unavailable).strip().upper()
-    apellido = jugadora_seleccionada.get("apellido", "").strip().upper()
-    nombre_completo = f"{nombre.capitalize()} {apellido.capitalize()}"
-    id_jugadora = jugadora_seleccionada.get("identificacion", unavailable)
-    posicion = jugadora_seleccionada.get("posicion", unavailable)
-    pais = jugadora_seleccionada.get("nacionalidad", unavailable)
-    fecha_nac = jugadora_seleccionada.get("fecha_nacimiento", unavailable)
-    sexo = jugadora_seleccionada.get("sexo", "")
-    competicion = jugadora_seleccionada.get("plantel", "")
-    dorsal = jugadora_seleccionada.get("dorsal", "")
-    url_drive = jugadora_seleccionada.get("foto_url", "")
-
-    dorsal_number = f":red[/ Dorsal #{int(dorsal)}]" if pd.notna(dorsal) else ""
-
-    # Calcular edad
-    edad_texto, fnac = calcular_edad(fecha_nac)
-
-    # Color temático
-    #color = "violet" if sexo.upper() == "F" else "blue"
-
-    # Icono de género
-    if sexo.upper() == "F":
-        genero_icono = ":material/girl:"
-        profile_image = "female"
-    elif sexo.upper() == "H":
-        genero_icono = ":material/boy:"
-        profile_image = "male"
-    else:
-        genero_icono = ""
-        profile_image = "profile"
-
-    # Bloque visual
-    st.markdown(f"### {nombre_completo.title()} {dorsal_number}")
-    #st.markdown(f"##### **_:red[Identificación:]_** _{id_jugadora}_ | **_:red[País:]_** _{pais.upper()}_")
-
-    col1, col2, col3 = st.columns([1.6, 2, 2])
-
-    with col1:
-        if pd.notna(url_drive) and url_drive and url_drive != "No Disponible":
-            direct_url = clean_image_url(url_drive)
-            #st.text(direct_url)
-            response = get_photo(direct_url)
-            if response and response.status_code == 200 and 'image' in response.headers.get("Content-Type", ""):
-                st.image(response.content, width=300)
-            else:
-                st.image(f"assets/images/{profile_image}.png", width=300)
-        else:
-            st.image(f"assets/images/{profile_image}.png", width=300)
-
-    with col2:
-        #st.markdown(f"**:material/sports_soccer: Competición:** {competicion}")
-        #st.markdown(f"**:material/cake: Fecha Nac.:** {fecha_nac}")
-
-        st.metric(label=f":red[:material/id_card: Identificación]", value=f"{id_jugadora}", border=True)
-        st.metric(label=f":red[:material/sports_soccer: Plantel]", value=f"{competicion}", border=True)
-        st.metric(label=f":red[:material/cake: F. Nacimiento]", value=f"{fecha_nac}", border=True)
-                    
-    with col3:
-        #st.markdown(f"**:material/person: Posición:** {posicion.capitalize()}")
-        #st.markdown(f"**:material/favorite: Edad:** {edad if edad != unavailable else 'N/A'} años")
-
-        st.metric(label=f":red[:material/globe: País]", value=f"{pais if pais else 'N/A'}", border=True)
-        st.metric(label=f":red[:material/person: Posición]", value=f"{posicion.capitalize() if posicion else 'N/A'}", border=True)
-        st.metric(label=f":red[:material/favorite: Edad]", value=f"{edad_texto}", border=True)
-          
-    st.divider()
 
 def main_metrics(records, modo="overview"):
     """
@@ -370,7 +276,7 @@ def main_metrics(records, modo="overview"):
 
     # --- Validación inicial ---
     if records.empty:    
-        st.warning("No hay datos de lesiones disponibles.")
+        st.warning(t("No hay datos de lesiones disponibles."))
         st.stop()  
 
     # Convertir fecha y limpiar
@@ -379,9 +285,24 @@ def main_metrics(records, modo="overview"):
     ultimos = records.copy()
     articulo, periodo = "", ""
 
+    default_period = "Semana"
+    OPCIONES_PERIODO = {
+       # "Hoy": t("Hoy"),
+       # "Último día": t("Último día"),
+        "Semana": t("Semana"),
+        "Mes": t("Mes")
+    }
+
     # --- MODO OVERVIEW ---
     if modo == "overview":
-        periodo = st.radio("Agrupar por:", ["Semana", "Mes"], horizontal=True)
+
+        periodo_traducido = st.radio(t("Periodo:"),
+        list(OPCIONES_PERIODO.values()),horizontal=True,
+        index=list(OPCIONES_PERIODO.keys()).index(default_period))
+
+        periodo = next(k for k, v in OPCIONES_PERIODO.items() if v == periodo_traducido)
+
+        #periodo = st.radio(t("Periodo:"), ["Semana", "Mes"], horizontal=True)
         articulo = "la última" if periodo == "Semana" else "el último"
 
         if periodo == "Semana":
@@ -458,50 +379,50 @@ def main_metrics(records, modo="overview"):
 
     with col1:
         st.metric(
-            "Total de lesiones registradas",
+            t("Total de lesiones registradas"),
             total_lesiones,
             f"{delta_total:+.1f}%",
             chart_data=chart_total,
             chart_type="area",
             border=True,
             delta_color="normal",
-            help=f"Variación del número total de lesiones comparado con {articulo} {periodo.lower()}."
+            help=f"{t('Variación del número total de lesiones comparado con')} {articulo} {periodo.lower()}."
             if help_texts else None,
         )
     with col2:
         st.metric(
-            "Lesiones activas",
+            t("Lesiones activas"),
             activas,
             f"{delta_activas:+.1f}%",
             chart_data=chart_activas,
             chart_type="line",
             border=True,
             delta_color="inverse",
-            help=f"Variación en las lesiones activas respecto a {articulo} {periodo.lower()}."
+            help=f"{t('Variación en las lesiones activas respecto a')} {articulo} {periodo.lower()}."
             if help_texts else None,
         )
     with col3:
         st.metric(
-            "Días de recuperación promedio",
+            t("Días de recuperación promedio"),
             promedio_dias_baja,
             f"{delta_dias:+.1f}%",
             chart_data=chart_dias,
             chart_type="area",
             border=True,
             delta_color="normal",
-            help=f"Variación del tiempo promedio de recuperación por {periodo.lower()}."
+            help=f"{t('Variación del tiempo promedio de recuperación por {periodo.lower()}.')}"
             if help_texts else None,
         )
     with col4:
         st.metric(
-            f"Zona más afectada: {zona_top}",
+            f"{t('Zona más afectada:')} {zona_top}",
             f"{zona_count} casos",
             f"{delta_zona:+.1f}%",
             chart_data=chart_zonas,
             chart_type="bar",
             border=True,
             delta_color="inverse",
-            help=f"Frecuencia de lesiones en {zona_top} comparado con {articulo} {periodo.lower()}."
+            help=f"{t('Frecuencia de lesiones en')} {zona_top} comparado con {articulo} {periodo.lower()}."
             if help_texts else None,
         )
 

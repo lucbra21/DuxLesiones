@@ -1,10 +1,10 @@
 import streamlit as st
+from src.i18n.i18n import t
 import src.config as config
 config.init_config()
-from src.util import clean_df
-from src.ui_components import data_filters
-from src.db_records import delete_lesiones
 
+from src.ui_components import selection_header
+from src.db_records import delete_lesiones
 from src.auth_system.auth_core import init_app_state, validate_login
 from src.auth_system.auth_ui import login_view, menu
 
@@ -15,33 +15,38 @@ validate_login()
 if not st.session_state["auth"]["is_logged_in"]:
     login_view()
     st.stop()
+menu()
 
 if st.session_state["auth"]["rol"].lower() not in ["admin", "developer"]:
     st.switch_page("app.py")
     
-st.header("Administrador de :red[registros]", divider=True)
+st.header(t("Administrador de :red[registros]"), divider=True)
 
-menu()
+jugadora_seleccionada, posicion, records = selection_header(modo=3)
+#records, jugadora, tipo, turno, start, end = selection_header(jug_df, comp_df, wellness_df, modo="reporte")
 
-jugadora_seleccionada, posicion, records = data_filters(modo=3)
+if records.empty:
+    st.error(t("No se encontraron registros"))
+    st.stop()
+
 disabled = records.columns.tolist()
 
+columna = t("seleccionar")
 # --- Agregar columna de selección si no existe ---
-if "seleccionar" not in records.columns:
-    records.insert(0, "seleccionar", False)
+if columna not in records.columns:
+    records.insert(0, columna, False)
 
-records_vista = records.drop("id", axis=1)
+#records_vista = records.drop("id", axis=1)
 
-
-df_edited = st.data_editor(records_vista, 
+df_edited = st.data_editor(records, 
         column_config={
-            "seleccionar": st.column_config.CheckboxColumn("Seleccionar", default=False)},   
+            columna: st.column_config.CheckboxColumn(columna, default=False)},   
         num_rows="fixed", hide_index=True, disabled=disabled)
 
-ids_seleccionados = df_edited.loc[df_edited["seleccionar"], "id_lesion"].tolist()
+ids_seleccionados = df_edited.loc[df_edited[columna], "id_lesion"].tolist()
 
 if st.session_state["auth"]["rol"].lower() in ["developer"]:
-    st.write("🩺 Lesiones seleccionadas:", ids_seleccionados)
+    st.write(t("Registros seleccionados:"), ids_seleccionados)
 
 #st.dataframe(records, hide_index=True)
 # save_if_modified(records, df_edited)
@@ -51,22 +56,23 @@ exito, mensaje = False, ""
 # ===============================
 # 🔸 Diálogo de confirmación
 # ===============================
-@st.dialog("Confirmar eliminación", width="small")
+@st.dialog(t("Confirmar"), width="small")
 def dialog_eliminar():
-    st.warning(f"¿Está seguro de eliminar {len(ids_seleccionados)} elemento(s)?")
+    st.warning(f"¿{t('Está seguro de eliminar')} {len(ids_seleccionados)} {t('elemento')}(s)?")
 
     _, col2, col3 = st.columns([1.8, 1, 1])
     with col2:
-        if st.button(":material/cancel: Cancelar"):
+        if st.button(t(":material/cancel: Cancelar")):
             st.rerun()
     with col3:
-        if st.button(":material/delete: Eliminar", type="primary"):
+        if st.button(t(":material/delete: Eliminar"), type="primary"):
             exito, mensaje = delete_lesiones(ids_seleccionados)
 
             if exito:
                 # Marcar para recarga
                 st.session_state["reload_flag"] = True
-
+            else:
+                st.error(mensaje)
             st.rerun()
 
 if st.session_state.get("reload_flag") and exito:     
@@ -76,12 +82,12 @@ if st.session_state.get("reload_flag") and exito:
 col1, col2, col3, _, _ = st.columns([1.6, 1.8, 2, 1, 1])
 with col1:
     # --- Botón principal para abrir el diálogo ---
-    if st.button(":material/delete: Eliminar seleccionados", disabled=len(ids_seleccionados) == 0):
+    if st.button(t(":material/delete: Eliminar seleccionados"), disabled=len(ids_seleccionados) == 0):
         dialog_eliminar()
 with col2:
     st.download_button(
-            label=":material/download: Descargar registros en CSV",
-            data=csv_data, file_name="registros_lesiones.csv", mime="text/csv")
+            label=t(":material/download: Descargar registros en CSV"),
+            data=csv_data, file_name="registros_wellness.csv", mime="text/csv")
 
 if st.session_state["auth"]["rol"].lower() in ["developer"]:
     with col3:
@@ -91,6 +97,6 @@ if st.session_state["auth"]["rol"].lower() in ["developer"]:
 
             # Botón de descarga
             st.download_button(
-                label=":material/download: Descargar registros en JSON",
-                data=json_bytes, file_name="registros_lesiones.json", mime="application/json"
+                label=t(":material/download: Descargar registros en JSON"),
+                data=json_bytes, file_name="registros_wellness.json", mime="application/json"
             )
