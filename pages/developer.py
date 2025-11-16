@@ -1,4 +1,3 @@
-import pandas as pd
 import streamlit as st
 import src.config as config
 config.init_config()

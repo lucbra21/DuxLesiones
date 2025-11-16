@@ -3,7 +3,6 @@ from src.db_connection import get_connection
 import streamlit as st
 import json
 from src.schema import MAP_POSICIONES
-from mysql.connector import Error
 from src.util import generar_id_lesion, contar_sesiones
 
 import json

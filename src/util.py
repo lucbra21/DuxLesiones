@@ -2,7 +2,6 @@ import math
 import re
 import numpy as np
 import requests
-import plotly.express as px
 import pandas as pd
 import json
 import random
