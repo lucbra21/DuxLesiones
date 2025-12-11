@@ -6,8 +6,8 @@ from src.i18n.i18n import t
 import pandas as pd
 import json
 
-from src.db_records import load_jugadoras_db, load_competiciones_db, load_lesiones_db
-from src.schema import MAP_POSICIONES
+from src.db.db_records import load_jugadoras_db, load_competiciones_db, load_lesiones_db
+from src.util.schema import MAP_POSICIONES
 
 def load_posiciones_traducidas() -> dict:
     return {key: t(valor_es) for key, valor_es in MAP_POSICIONES.items()}
