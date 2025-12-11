@@ -57,6 +57,12 @@ st.info(t("No hay registros disponibles en este periodo."))
 - Usa directamente tus textos originales como clave de traducción.
 - Si una clave no existe, se muestra el texto original (en español).
 
+## Clean Code
+
+pip install ruff
+
+ruff check . --select F401 --fix
+
 ## Notas
 
 - Vista de una sola página, previsualización antes de guardar y botón deshabilitado hasta cumplir validaciones.

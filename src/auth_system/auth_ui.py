@@ -1,11 +1,16 @@
 import streamlit as st
-from src.db_login import load_user_from_db
+from src.db.db_login import load_user_from_db
 from src.auth_system.auth_core import logout, validate_access
-from src.util import centered_text
+from src.util.util import right_caption, set_background_image_local
 from src.i18n.i18n import t, language_selector
 
 def login_view() -> None:
     """Renderiza el formulario de inicio de sesión."""
+
+    # Ruta local o URL de la imagen
+    #background_image_url = "https://images.unsplash.com/photo-1503264116251-35a269479413"
+    set_background_image_local("assets/images/fondo.jpg")
+   
     _, col2, _ = st.columns([2, 1.5, 2])
     with col2:
         st.markdown("""
@@ -14,14 +19,16 @@ def login_view() -> None:
                 [data-testid="stBaseButton-headerNoPadding"] { display: none !important; }
             </style>
         """, unsafe_allow_html=True)
-
-        centered_text("Control de Lesiones")
+        
+        st.markdown("<br><br>", unsafe_allow_html=True)
         st.image("assets/images/banner.png")
 
         with st.form("login_form", clear_on_submit=False):
             username = st.text_input("Usuario", value="")
             password = st.text_input("Contraseña", type="password", value="")
             submitted = st.form_submit_button("Iniciar sesión", type="primary")
+
+        right_caption("Control de Lesiones")
 
         if submitted:
             user_data = load_user_from_db(username)
@@ -37,7 +44,7 @@ def menu():
         st.subheader(f'Rol: {st.session_state["auth"]["rol"].capitalize()} :material/admin_panel_settings:')
         
         #st.write(f"Usuario: {st.session_state['auth']['username']}")
-        st.write(f"{t('Hola')} **:blue-background[{st.session_state['auth']['username'].capitalize()}]** ")
+        st.write(f"{t('Hola')} **:blue-background[{st.session_state['auth']['name'].capitalize()}]** ")
 
         st.page_link("app.py", label=t("Inicio"), icon=":material/home:")
         st.subheader(t("Modo :material/dashboard:"))
@@ -50,7 +57,7 @@ def menu():
 
         if st.session_state["auth"]["rol"].lower() == "admin" or st.session_state["auth"]["rol"].lower() == "developer":
             st.subheader(t("Administración :material/settings:"))
-            st.page_link("pages/admin_files.py", label=t("Registros"), icon=":material/docs:")
+            st.page_link("pages/admin.py", label=t("Registros"), icon=":material/docs:")
         
         if st.session_state["auth"]["rol"].lower() == "developer":
             #st.page_link("pages/ficha_medica.py", label=t("Ficha Médica"), icon=":material/lab_profile:")

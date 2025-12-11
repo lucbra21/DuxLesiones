@@ -1,4 +1,4 @@
-from src.db_connection import get_connection
+from src.db.db_connection import get_connection
 
 def fetch_all(query, params=None):
     """Obtiene múltiples registros."""

@@ -1,21 +1,10 @@
 import streamlit as st
 from src.i18n.i18n import t
-import src.config as config
+import src.app_config.config as config
 config.init_config()
 
-from src.ui_components import selection_header
-from src.db_records import delete_lesiones
-from src.auth_system.auth_core import init_app_state, validate_login
-from src.auth_system.auth_ui import login_view, menu
-
-init_app_state()
-validate_login()
-
-# Authentication gate
-if not st.session_state["auth"]["is_logged_in"]:
-    login_view()
-    st.stop()
-menu()
+from src.ui.ui_components import selection_header
+from src.db.db_records import delete_lesiones
 
 if st.session_state["auth"]["rol"].lower() not in ["admin", "developer"]:
     st.switch_page("app.py")

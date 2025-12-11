@@ -7,9 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.0.0] - 2025-12-08
+
+### Added
+- Manejo de cookies y sesiones
+
+## [3.0.0] - 2025-11-16
+
+### Added
+- Reportes
+- Conexión a base de datos.
+- Traducciones 
+
+## [2.0.0] - 2025-11-16
+
+### Added
+- Visualización de registros.
+- Cookies y Variables de sesión.
+
+## [1.0.0] - 2025-11-16
+
 ### Added
 - Menu e inicio de sesión.
-- Visualización de registros.
-- Cookies y Login
-- Reportes
-- Traducciones
+- Registro de lesiones.

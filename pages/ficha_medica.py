@@ -1,21 +1,9 @@
 import streamlit as st
 import datetime
-import src.config as config
+import src.app_config.config as config
 config.init_config()
 
-from src.auth_system.auth_core import init_app_state, validate_login
-from src.auth_system.auth_ui import login_view, menu
-
-from src.ui_components import selection_header, player_block_dux
-
-# --- Inicialización y autenticación ---
-init_app_state()
-validate_login()
-
-if not st.session_state["auth"]["is_logged_in"]:
-    login_view()
-    st.stop()
-menu()
+from src.ui.ui_components import selection_header
 
 st.header("Ficha :red[médica]", divider=True)
 
@@ -24,7 +12,7 @@ jugadora_seleccionada, posicion, records = selection_header(modo=2)
 st.divider()
 
 # --- Bloque de jugadora seleccionada ---
-player_block_dux(jugadora_seleccionada)
+#player_block_dux(jugadora_seleccionada)
 st.divider()
 
 if jugadora_seleccionada:

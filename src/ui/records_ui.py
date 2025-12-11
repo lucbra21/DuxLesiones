@@ -1,14 +1,15 @@
 import streamlit as st
 import datetime
-from src.io_files import load_catalog_list
+from src.util.io_files import load_catalog_list
 import pandas as pd
 import json
 from src.i18n.i18n import t
-from src.util import (is_valid, parse_fecha, get_gravedad_por_dias, 
+from src.util.util import (is_valid, parse_fecha, get_gravedad_por_dias, 
                       get_normalized_treatment, to_date, date_to_str)
 
-from src.db_catalogs import load_catalog_list_db
-from src.ui_components import preview_record
+from src.db.db_catalogs import load_catalog_list_db
+from src.ui.ui_components import preview_record
+from src.util.key_builder import KeyBuilder
 
 def view_registro_lesion(modo: str = "nuevo", jugadora_info: str = None, lesion_data = None) -> None:
 
