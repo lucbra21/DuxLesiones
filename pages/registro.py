@@ -1,24 +1,12 @@
 import time
 import streamlit as st
 from src.i18n.i18n import t
-import src.config as config
+import src.app_config.config as config
 config.init_config()
 
-from src.auth_system.auth_core import init_app_state, validate_login
-from src.auth_system.auth_ui import login_view, menu
-
-init_app_state()
-validate_login()
-
-from src.ui_components import selection_header
-from src.records_ui import view_registro_lesion
-from src.db_records import save_lesion
-
-# Authentication gate
-if not st.session_state["auth"]["is_logged_in"]:
-    login_view()
-    st.stop()
-menu()
+from src.ui.ui_components import selection_header
+from src.ui.records_ui import view_registro_lesion
+from src.db.db_records import save_lesion
 
 st.header(t("Registro de :red[lesiones]"), divider=True)
 

@@ -1,14 +1,17 @@
+import streamlit as st
+
 import math
 import re
 import numpy as np
 import requests
 import pandas as pd
 import json
-import random
+
 import datetime
 from pathlib import Path
 from urllib.parse import urlparse, urlunparse
-
+import base64
+import re
 import unicodedata
 import datetime
 from dateutil.relativedelta import relativedelta  # pip install python-dateutil
@@ -20,9 +23,6 @@ def normalize_text(s):
     s = s.strip().upper()
     s = unicodedata.normalize("NFKC", s)  # Normaliza forma Unicode
     return s
-
-import json
-import streamlit as st
 
 def get_normalized_treatment(lesion_data):
     """
@@ -63,7 +63,17 @@ def get_photo(url):
 
 def centered_text(text : str):
         st.markdown(f"<h3 style='text-align: center;'>{text}</span></h3>",unsafe_allow_html=True)
-        
+
+def right_caption(text: str):
+    st.markdown(
+        f"""
+        <p style='text-align: right; font-size: 0.85rem; color: #666;'>
+            {text}
+        </p>
+        """,
+        unsafe_allow_html=True
+    )
+
 def clean_df(records):
     columnas_excluir = [
         "id_registro",
@@ -189,7 +199,6 @@ def get_drive_direct_url(url: str) -> str:
         raise ValueError("La URL no parece ser de Google Drive")
 
     # Buscar el ID del archivo
-    import re
     match = re.search(r"/d/([a-zA-Z0-9_-]+)", url)
     if not match:
         raise ValueError("No se pudo extraer el ID del archivo de la URL")
@@ -239,95 +248,6 @@ def load_lesiones_jsonl(path: str | Path) -> tuple[pd.DataFrame | None, str | No
 
     except Exception as e:
         return None, f"Error al cargar el archivo de lesiones: {e}"
-
-def generar_lesiones_aleatorias(
-    jugadoras_path: str,
-    output_dir: str = "data",
-    lesiones_por_jugadora: int = 10
-) -> Path:
-    """
-    Genera lesiones aleatorias para cada jugadora y guarda los datos en un archivo JSONL.
-    Si el archivo no existe, se crea uno nuevo con el nombre 'lesiones_YYYY-MM-DD_HHMM.jsonl'.
-
-    Compatible tanto con formato JSON estándar (lista []) como JSONL (una jugadora por línea).
-    """
-
-    jugadoras = []
-    with open(jugadoras_path, "r", encoding="utf-8") as f:
-        content = f.read().strip()
-
-        try:
-            # Si es una lista JSON estándar
-            parsed = json.loads(content)
-            if isinstance(parsed, list):
-                jugadoras = parsed
-            elif isinstance(parsed, dict):
-                jugadoras = [parsed]
-        except json.JSONDecodeError:
-            # Si no es JSON válido, intentar como JSONL
-            for line in content.splitlines():
-                line = line.strip()
-                if not line:
-                    continue
-                try:
-                    jugadoras.append(json.loads(line))
-                except json.JSONDecodeError:
-                    print(f"⚠️ Línea ignorada (no es JSON válido): {line[:40]}...")
-
-    if not jugadoras:
-        raise ValueError(f"No se encontraron jugadoras válidas en {jugadoras_path}")
-
-    # --- Listas de opciones según tu app ---
-    estados = ["ACTIVO", "INACTIVO"]
-    zonas = ["Cabeza", "Cuello", "Tronco", "Hombro", "Codo", "Muñeca", "Mano",
-             "Cadera", "Ingle", "Rodilla", "Tobillo", "Pie", "Muslo", "Pierna"]
-    gravedades = ["Leve", "Moderada", "Grave"]
-    tipos_lesion = ["Muscular", "Ósea", "Tendinosa", "Articular", "Ligamentosa", "Contusión"]
-    mecanismos = ["Entrenamiento", "Partido", "Gimnasio", "Otro"]
-    lateralidades = ["Derecha", "Izquierda", "Bilateral"]
-    tratamientos = ["Fisioterapia", "Medicación", "Gimnasio", "Cirugía", "Reposo", "Readaptación"]
-
-    today = datetime.date.today()
-    lesiones = []
-
-    for j in jugadoras:
-        id_j = j.get("id_jugadora") or j.get("id") or str(random.randint(1000, 9999))
-        nombre_j = j.get("nombre_jugadora") or j.get("nombre") or "Desconocida"
-
-        for _ in range(lesiones_por_jugadora):
-            dias_baja = random.randint(3, 45)
-            fecha_inicio = today - datetime.timedelta(days=random.randint(1, 180))
-            fecha_diagnostico = fecha_inicio + datetime.timedelta(days=random.randint(2, 7))
-            fecha_alta_real = fecha_diagnostico + datetime.timedelta(days=dias_baja)
-
-            lesion = {
-                "id_jugadora": id_j,
-                "nombre_jugadora": nombre_j,
-                "estado_lesion": random.choice(estados),
-                "zona_cuerpo": random.choice(zonas),
-                "fecha_alta_diagnostico": fecha_diagnostico.isoformat(),
-                "gravedad": random.choice(gravedades),
-                "dias_baja_estimado": dias_baja,
-                "fecha_alta_lesion": fecha_alta_real.isoformat(),
-                "tipo_lesion": random.choice(tipos_lesion),
-                "mecanismo": random.choice(mecanismos),
-                "personal_reporta": random.choice(["Dr. López", "Dra. García", "Fisio Martín", "Dra. Pérez"]),
-                "lateralidad": random.choice(lateralidades),
-                "tipo_tratamiento": random.sample(tratamientos, k=random.randint(1, 3))
-            }
-            lesiones.append(lesion)
-
-    # --- Crear archivo dinámico ---
-    Path(output_dir).mkdir(parents=True, exist_ok=True)
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H%M")
-    output_path = Path(output_dir) / f"lesiones_{timestamp}.jsonl"
-
-    with open(output_path, "w", encoding="utf-8") as f:
-        for lesion in lesiones:
-            f.write(json.dumps(lesion, ensure_ascii=False) + "\n")
-
-    #print(f"✅ Generadas {len(lesiones)} lesiones en: {output_path}")
-    return output_path
 
 def parse_fecha(value):
     """
@@ -507,6 +427,7 @@ def sanitize_lesion_data(lesion_data: dict) -> dict:
     return clean
 
 def contar_sesiones(evol_raw):
+    
     """Cuenta cuántas sesiones tiene una evolución (campo JSON o lista)."""
     if not evol_raw:
         return 0
@@ -521,3 +442,103 @@ def contar_sesiones(evol_raw):
         return 0
 
     return len(evol_list) if isinstance(evol_list, list) else 0
+
+def set_background_image_local(image_path: str, fixed: bool = False, overlay: float = 0.0):
+    """
+    Aplica una imagen de fondo local a toda la app Streamlit usando Base64.
+    
+    Parámetros:
+        image_path (str): Ruta de la imagen local. Ej: "assets/images/banner.jpg"
+        fixed (bool): Si True, fondo con efecto parallax (fixed).
+        overlay (float): Oscurecer fondo (0.0 = sin overlay, 0.0–1.0 máximo).
+    """
+
+    # Convertir imagen local a Base64
+    with open(image_path, "rb") as img_file:
+        img_base64 = base64.b64encode(img_file.read()).decode()
+
+    attachment = "fixed" if fixed else "scroll"
+
+    overlay_css = ""
+    if overlay > 0:
+        overlay_css = f"""
+        [data-testid="stAppViewContainer"]::before {{
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,{overlay});
+            z-index: 0;
+        }}
+        [data-testid="stAppViewContainer"] > * {{
+            position: relative;
+            z-index: 1;
+        }}
+        """
+
+    css = f"""
+    <style>
+    [data-testid="stAppViewContainer"] {{
+        background-image: url("data:image/jpg;base64,{img_base64}");
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-position: center center;
+        background-attachment: {attachment};
+    }}
+
+    [data-testid="stHeader"] {{
+        background: rgba(0,0,0,0);
+    }}
+
+    {overlay_css}
+    </style>
+    """
+
+    st.markdown(css, unsafe_allow_html=True)
+
+def set_background_image(image_url: str, fixed: bool = False, overlay: float = 0.0):
+    """
+    Aplica una imagen de fondo a toda la app Streamlit.
+
+    Parámetros:
+        image_url (str): URL o ruta local de la imagen.
+        fixed (bool): Si True, el fondo queda fijo (efecto parallax).
+        overlay (float): Oscurecer fondo (0.0 = sin overlay, 0.0–1.0).
+    """
+
+    attachment = "fixed" if fixed else "scroll"
+
+    overlay_css = ""
+    if overlay > 0:
+        overlay_css = f"""
+        [data-testid="stAppViewContainer"]::before {{
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,{overlay});
+            z-index: 0;
+        }}
+        [data-testid="stAppViewContainer"] > * {{
+            position: relative;
+            z-index: 1;
+        }}
+        """
+
+    css = f"""
+    <style>
+    [data-testid="stAppViewContainer"] {{
+        background-image: url("{image_url}");
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-position: center center;
+        background-attachment: {attachment};
+    }}
+
+    [data-testid="stHeader"] {{
+        background: rgba(0,0,0,0);
+    }}
+
+    {overlay_css}
+    </style>
+    """
+
+    st.markdown(css, unsafe_allow_html=True)

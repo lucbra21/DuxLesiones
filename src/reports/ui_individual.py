@@ -4,7 +4,7 @@ import plotly.express as px
 import pandas as pd
 from src.i18n.i18n import t
 
-from src.util import (get_photo, clean_image_url, calcular_edad)
+from src.util.util import (get_photo, clean_image_url, calcular_edad)
 
 def player_block_dux(jugadora_seleccionada: dict, unavailable="N/A"):
     """Muestra el bloque visual con la información principal de la jugadora."""

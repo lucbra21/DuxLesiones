@@ -1,9 +1,9 @@
 import pandas as pd
-from src.db_connection import get_connection
+from src.db.db_connection import get_connection
 import streamlit as st
 import json
-from src.schema import MAP_POSICIONES
-from src.util import generar_id_lesion, contar_sesiones
+from src.util.schema import MAP_POSICIONES
+from src.util.util import generar_id_lesion, contar_sesiones
 
 import json
 import streamlit as st
